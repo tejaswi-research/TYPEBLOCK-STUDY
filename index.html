@@ -694,7 +694,6 @@
     </div>
   </div>
 
-  <div class="footer-note">⚡ Swap in Perspective API key (line 4 of script) to activate live scoring</div>
 </div>
 
 <div class="success-flash" id="success-flash">✓ Message sent</div>
@@ -708,7 +707,7 @@ const PERSPECTIVE_API_KEY = null;
 
 // ── REMOTE STUDY CONFIG ──────────────────────────────────────────────────────
 // 1. Deploy your Google Apps Script (see setup guide) and paste the URL below
-const SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwaUt-Kdba5MNS4k7tYl261L6-V8ukrx_HLCXnPGhm4kzjWBjSJxNlvjrjGHcttbzab/exec';
+const SHEETS_WEBHOOK_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
 // 2. Paste your post-session survey URL below (with ?pid= at the end)
 const SURVEY_URL = 'YOUR_SURVEY_URL_HERE?pid=';
 
@@ -889,6 +888,9 @@ const whitelist = new Set([
   'knowing','knew','taking',
   // Specifically flagged innocent tokens from live testing
   'when','hear','hears','heard','weren','mine','more','stop','sure','us','shared',
+  'cancel','plans','tolerate','intolerable','opinions','opinion','spreading','rumours',
+  'cant','wont','dont','isnt','wasnt','couldnt','shouldnt','wouldnt','arent','didnt','hadnt',
+  'false','record','straight','classmate','interrupting','discussions','credit','third',
   'once','moving','respectful','things','forward','discussions','credit',
   'okay','need','needs','make','their','there','these','those',
   'then','than','that','this','will','with','well','were','want',
@@ -1368,7 +1370,13 @@ function simulateScore(text) {
   // Classic tone boosters
   if (/[!?]{2,}/.test(text)) max = Math.min(1, max + 0.10);
   if (text === text.toUpperCase() && text.replace(/\s/g,'').length > 5) max = Math.min(1, max + 0.08);
-  if (hasObfuscation(text)) max = Math.min(1, max + 0.12);
+
+  // Obfuscation boost — asterisks/symbols replacing letters is deliberate evasion
+  // Give it a strong minimum score regardless of word matching
+  if (hasObfuscation(text)) {
+    max = Math.max(max, 0.75); // minimum 75% if deliberate symbol evasion detected
+    max = Math.min(1, max + 0.12);
+  }
 
   return Math.round(max * 100) / 100;
 }
@@ -1691,7 +1699,7 @@ function goToSurvey() {
   const target = SURVEY_URL !== 'YOUR_SURVEY_URL_HERE?pid='
     ? SURVEY_URL + encodeURIComponent(urlPid) : null;
   if (target) { window.location.href = target; }
-  else { alert('Survey URL not configured — please notify the researcher.'); }
+  else { alert('Survey URL not configured - please notify the researcher.'); }
 }
 
 function renderLog() {
@@ -1743,7 +1751,7 @@ document.getElementById('msg-input').addEventListener('scroll', function() {
     <div style="font-size:40px; margin-bottom:16px;">✅</div>
     <div style="font-size:11px; font-weight:600; letter-spacing:0.8px; color:#1a56db; text-transform:uppercase; margin-bottom:10px;">Session Complete</div>
     <div style="font-size:19px; font-weight:600; color:#0f172a; margin-bottom:10px;">All scenarios done!</div>
-    <div style="font-size:13.5px; color:#64748b; margin-bottom:28px; line-height:1.6;">Thank you for completing all 4 scenarios. Your responses have been recorded. Please click below to proceed to the short survey — it takes about 5 minutes.</div>
+    <div style="font-size:13.5px; color:#64748b; margin-bottom:28px; line-height:1.6;">Thank you for completing all 4 scenarios. Your responses have been recorded. Please click below to proceed to the short survey - it takes about 5 minutes.</div>
     <button onclick="goToSurvey()" style="width:100%; padding:13px; background:#1a56db; color:white; border:none; border-radius:8px; font-family:'Inter',sans-serif; font-size:14px; font-weight:600; cursor:pointer; margin-bottom:10px; box-shadow:0 2px 8px rgba(26,86,219,0.25);">
       Continue to Survey →
     </button>
