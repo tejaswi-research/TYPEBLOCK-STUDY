@@ -1,0 +1,1759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TYPEBLOCK - Research Prototype</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f0f4f8;
+    --white: #ffffff;
+    --blue: #1a56db;
+    --blue-hover: #1447c0;
+    --blue-soft: #eff4ff;
+    --blue-border: #c7d7fd;
+    --border: #e2e8f0;
+    --border-strong: #cbd5e1;
+    --text: #0f172a;
+    --text-muted: #64748b;
+    --text-dim: #94a3b8;
+    --warn: #dc2626;
+    --warn-soft: #fef2f2;
+    --warn-border: #fecaca;
+    --ok: #16a34a;
+    --ok-soft: #f0fdf4;
+    --ok-border: #bbf7d0;
+    --amber: #d97706;
+    --amber-soft: #fffbeb;
+    --amber-border: #fde68a;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04);
+    --shadow-lg: 0 8px 32px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.04);
+  }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Layout ── */
+  .page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px 80px;
+  }
+
+  /* ── Header ── */
+  header { text-align: center; margin-bottom: 32px; }
+
+  .logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+  }
+
+  .logo-icon {
+    width: 34px; height: 34px;
+    background: var(--blue);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px; font-weight: 500;
+    color: white;
+    box-shadow: 0 2px 8px rgba(26,86,219,0.3);
+  }
+
+  .logo-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    color: var(--text);
+  }
+
+  .logo-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    letter-spacing: 0.3px;
+  }
+
+  /* ── Card ── */
+  .card {
+    width: 100%;
+    max-width: 660px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+  }
+
+  .card-header {
+    padding: 16px 22px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--white);
+  }
+
+  .card-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+
+  /* ── Scenario panel ── */
+  .scenario-panel {
+    padding: 16px 22px;
+    background: var(--blue-soft);
+    border-bottom: 1px solid var(--blue-border);
+  }
+
+  .scenario-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    color: var(--blue);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .scenario-text {
+    font-size: 13.5px;
+    color: var(--text);
+    font-style: italic;
+    line-height: 1.55;
+  }
+
+  .scenario-nav {
+    display: flex;
+    gap: 6px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+
+  .scenario-btn {
+    padding: 5px 14px;
+    border-radius: 99px;
+    border: 1.5px solid var(--blue-border);
+    background: white;
+    color: var(--text-muted);
+    font-family: 'Inter', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .scenario-btn:hover {
+    border-color: var(--blue);
+    color: var(--blue);
+    background: var(--blue-soft);
+  }
+
+  .scenario-btn.active {
+    background: var(--blue);
+    border-color: var(--blue);
+    color: white;
+  }
+
+  .scenario-btn.done {
+    border-color: var(--ok-border);
+    background: var(--ok-soft);
+    color: var(--ok);
+  }
+
+  .scenario-btn.done.active {
+    background: var(--ok);
+    border-color: var(--ok);
+    color: white;
+  }
+
+  /* ── Input area ── */
+  .input-area { padding: 20px 22px; }
+
+  .textarea-wrapper { position: relative; margin-bottom: 12px; }
+
+  /* ── Textarea mirror highlight system ── */
+  .textarea-wrapper {
+    position: relative;
+    margin-bottom: 12px;
+    background: var(--white);
+    border-radius: 8px;
+    /* White background ensures highlights are always visible */
+  }
+
+  .textarea-mirror {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    padding: 12px 14px;
+    padding-right: 52px; /* room for char count */
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    color: transparent; /* text invisible — only highlights show */
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow: hidden;
+    border: 1.5px solid transparent;
+    border-radius: 8px;
+    pointer-events: none;
+    z-index: 1;
+    background: transparent;
+  }
+
+  /* Highlight marks inside mirror — visible through transparent textarea */
+  .highlight-tier1 {
+    background: rgba(220,38,38,0.20);
+    border-bottom: 2.5px solid #dc2626;
+    border-radius: 2px;
+    color: transparent;
+    padding-bottom: 1px;
+  }
+  .highlight-tier2 {
+    background: rgba(234,88,12,0.18);
+    border-bottom: 2.5px solid #ea580c;
+    border-radius: 2px;
+    color: transparent;
+    padding-bottom: 1px;
+  }
+  .highlight-tier3 {
+    background: rgba(217,119,6,0.14);
+    border-bottom: 2px solid #d97706;
+    border-radius: 2px;
+    color: transparent;
+    padding-bottom: 1px;
+  }
+  .highlight-context {
+    background: rgba(99,102,241,0.14);
+    border-bottom: 2px dashed #6366f1;
+    border-radius: 2px;
+    color: transparent;
+    padding-bottom: 1px;
+  }
+
+  textarea {
+    position: relative;
+    z-index: 2;
+    background: transparent !important; /* MUST stay transparent — highlights show through */
+    width: 100%;
+    min-height: 108px;
+    border: 1.5px solid var(--border-strong);
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    line-height: 1.6;
+  }
+
+  textarea:focus {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(26,86,219,0.08);
+  }
+
+  textarea.flagged {
+    border-color: var(--warn) !important;
+    /* No background override — keep transparent so highlights show */
+    box-shadow: 0 0 0 3px rgba(220,38,38,0.06) !important;
+  }
+
+  textarea::placeholder { color: var(--text-dim); }
+
+  .char-count {
+    position: absolute; bottom: 10px; right: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    pointer-events: none;
+  }
+
+  /* ── Symbol flag ── */
+  .symbol-flag {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--amber-soft);
+    border: 1px solid var(--amber-border);
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--amber);
+    font-weight: 500;
+    margin-bottom: 10px;
+  }
+
+  /* ── Analysis bar ── */
+  .analysis-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+    padding: 10px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    min-height: 44px;
+    transition: opacity 0.3s;
+  }
+
+  .analysis-bar.hidden { opacity: 0; pointer-events: none; }
+
+  .analysis-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+
+  .score-track {
+    flex: 1;
+    height: 5px;
+    background: var(--border);
+    border-radius: 99px;
+    overflow: hidden;
+  }
+
+  .score-fill {
+    height: 100%;
+    border-radius: 99px;
+    transition: width 0.4s cubic-bezier(0.4,0,0.2,1), background 0.4s;
+    width: 0%;
+  }
+
+  .score-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 500;
+    min-width: 36px;
+    text-align: right;
+    transition: color 0.3s;
+  }
+
+  .spinner {
+    width: 14px; height: 14px;
+    border: 2px solid var(--border);
+    border-top-color: var(--blue);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    display: none;
+    flex-shrink: 0;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Warning message ── */
+  .warn-message {
+    display: none;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    background: var(--warn-soft);
+    border: 1px solid var(--warn-border);
+    border-radius: 8px;
+    margin-bottom: 12px;
+    animation: slideIn 0.2s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .warn-icon { font-size: 14px; margin-top: 2px; flex-shrink: 0; }
+
+  .warn-text { font-size: 13px; color: #991b1b; line-height: 1.5; }
+
+  .warn-text strong { color: var(--warn); font-weight: 600; }
+
+  /* ── Actions ── */
+  .actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .left-actions { display: flex; gap: 8px; }
+
+  .btn-secondary {
+    padding: 8px 16px;
+    border-radius: 7px;
+    border: 1px solid var(--border-strong);
+    background: var(--white);
+    color: var(--text-muted);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--blue);
+    color: var(--blue);
+    background: var(--blue-soft);
+  }
+
+  .btn-send {
+    padding: 9px 26px;
+    border-radius: 7px;
+    border: none;
+    background: var(--blue);
+    color: white;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 1px 4px rgba(26,86,219,0.25);
+    letter-spacing: 0.2px;
+  }
+
+  .btn-send:hover:not(:disabled) {
+    background: var(--blue-hover);
+    box-shadow: 0 3px 10px rgba(26,86,219,0.3);
+    transform: translateY(-1px);
+  }
+
+  .btn-send:disabled {
+    background: var(--border);
+    color: var(--text-dim);
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+  }
+
+  /* ── Log panel ── */
+  .log-panel {
+    border-top: 1px solid var(--border);
+    padding: 18px 22px;
+    background: var(--white);
+  }
+
+  .log-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.8px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .log-count {
+    background: var(--blue);
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 7px;
+    border-radius: 99px;
+    min-width: 18px;
+    text-align: center;
+  }
+
+  .log-empty {
+    font-size: 13px;
+    color: var(--text-dim);
+    font-style: italic;
+    text-align: center;
+    padding: 16px 0;
+  }
+
+  .log-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  .log-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 7px;
+    font-size: 13px;
+    animation: slideIn 0.2s ease;
+    border: 1px solid transparent;
+  }
+
+  .log-item.sent    { background: var(--ok-soft);   border-color: var(--ok-border); }
+  .log-item.blocked { background: var(--warn-soft);  border-color: var(--warn-border); }
+  .log-item.abandoned { background: var(--blue-soft); border-color: var(--blue-border); }
+
+  .log-status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    white-space: nowrap;
+    margin-top: 2px;
+    text-transform: uppercase;
+  }
+
+  .log-item.sent      .log-status { background: #dcfce7; color: var(--ok); }
+  .log-item.blocked   .log-status { background: #fee2e2; color: var(--warn); }
+  .log-item.abandoned .log-status { background: var(--blue-soft); color: var(--blue); }
+
+  .log-content { flex: 1; color: var(--text-muted); line-height: 1.4; }
+  .log-score {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+
+  /* ── Stats ── */
+  .stats-row { display: flex; gap: 8px; margin-top: 12px; }
+
+  .stat-box {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px;
+    text-align: center;
+  }
+
+  .stat-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px;
+    font-weight: 500;
+    margin-bottom: 2px;
+    color: var(--text);
+  }
+
+  .stat-label { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+  .stat-box.s-sent      .stat-val { color: var(--ok); }
+  .stat-box.s-blocked   .stat-val { color: var(--warn); }
+  .stat-box.s-abandoned .stat-val { color: var(--blue); }
+
+  /* ── Footer ── */
+  .footer-note {
+    margin-top: 24px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 0.3px;
+  }
+
+  /* ── Success flash ── */
+  .success-flash {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(16px);
+    background: var(--ok);
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 9px 22px;
+    border-radius: 99px;
+    opacity: 0;
+    transition: all 0.25s;
+    pointer-events: none;
+    z-index: 100;
+    white-space: nowrap;
+    box-shadow: 0 4px 16px rgba(22,163,74,0.3);
+  }
+
+  .success-flash.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ── Scrollbar ── */
+  .log-list::-webkit-scrollbar { width: 4px; }
+  .log-list::-webkit-scrollbar-track { background: transparent; }
+  .log-list::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+
+  /* ── Condition badge ── */
+  #condition-badge {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--blue);
+    background: var(--blue-soft);
+    border: 1px solid var(--blue-border);
+    padding: 3px 10px;
+    border-radius: 99px;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <div class="logo">
+      <div class="logo-icon">TB</div>
+      <div class="logo-text">TYPEBLOCK</div>
+    </div>
+  </header>
+
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title">Message Composer</div>
+      <div id="condition-badge" style="font-family:'DM Mono',monospace; font-size:11px; letter-spacing:1.5px; color:var(--text-muted); padding:4px 12px; border:1px solid var(--border); border-radius:6px;"></div>
+    </div>
+
+    <div class="scenario-panel">
+      <div class="scenario-label" id="scenario-counter">Scenario 1 of 4</div>
+      <div class="scenario-text" id="scenario-text"></div>
+      <div class="scenario-nav" id="scenario-nav"></div>
+    </div>
+
+    <div class="input-area">
+      <div class="textarea-wrapper">
+        <!-- Mirror div sits behind textarea, renders highlighted text -->
+        <div class="textarea-mirror" id="textarea-mirror"></div>
+        <textarea id="msg-input" placeholder="Type your response to the scenario above..." maxlength="500" oninput="handleInput()"></textarea>
+        <div class="char-count" id="char-count">0 / 500</div>
+      </div>
+
+      <div class="symbol-flag" id="symbol-flag">⚠️ Evasion pattern detected — normalized before analysis</div>
+
+      <div class="analysis-bar hidden" id="analysis-bar">
+        <div class="analysis-label">TOXICITY</div>
+        <div class="score-track"><div class="score-fill" id="score-fill"></div></div>
+        <div class="score-value" id="score-value">—</div>
+        <div class="spinner" id="spinner"></div>
+      </div>
+      <div class="tier-legend" id="tier-legend" style="display:none; justify-content:space-between; margin-bottom:12px; padding:0 2px;">
+        <span style="font-size:10px; color:#16a34a; font-weight:600;">✓ 0–30% OK</span>
+        <span style="font-size:10px; color:#d97706; font-weight:600;">⚠ 30–60% Caution</span>
+        <span style="font-size:10px; color:#ea580c; font-weight:600;">✗ 60–80% Harmful</span>
+        <span style="font-size:10px; color:#dc2626; font-weight:600;">✗ 80%+ Severe</span>
+      </div>
+
+      <div class="warn-message" id="warn-message">
+        <div class="warn-icon" id="warn-icon">⚠️</div>
+        <div class="warn-text" id="warn-text"><strong id="warn-title">This message may be harmful.</strong> <span id="warn-body">Please rephrase before sending. The send button will re-enable once the content passes the safety threshold.</span></div>
+      </div>
+
+      <div class="actions">
+        <div class="left-actions">
+          <button class="btn-secondary" onclick="clearMsg()">Clear</button>
+          <button class="btn-secondary" id="btn-abandon" style="display:none" onclick="abandonMsg()">Abandon</button>
+        </div>
+        <button class="btn-send" id="btn-send" disabled onclick="sendMsg()">
+          Send <span>→</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="log-panel">
+      <div class="log-title">
+        Session Log <span class="log-count" id="log-count">0</span>
+      </div>
+      <div id="log-empty" class="log-empty">No messages yet — start typing above</div>
+      <div class="log-list" id="log-list" style="display:none"></div>
+      <div class="stats-row" id="stats-row" style="display:none">
+        <div class="stat-box s-sent"><div class="stat-val" id="stat-sent">0</div><div class="stat-label">Sent</div></div>
+        <div class="stat-box s-blocked"><div class="stat-val" id="stat-blocked">0</div><div class="stat-label">Blocked</div></div>
+        <div class="stat-box s-abandoned"><div class="stat-val" id="stat-abandoned">0</div><div class="stat-label">Abandoned</div></div>
+      </div>
+      <div id="export-area" style="display:none; margin-top:14px; padding-top:14px; border-top:1px solid #e2e8f0;">
+        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+          <input id="export-pid" type="text" placeholder="Participant ID (e.g. P01)" maxlength="10"
+            style="flex:1; min-width:140px; padding:7px 11px; border:1.5px solid #e2e8f0; border-radius:7px; background:white; color:#0f172a; font-family:'JetBrains Mono',monospace; font-size:12px; outline:none;">
+          <button onclick="exportCSV()" style="padding:8px 18px; background:#1a56db; color:white; border:none; border-radius:7px; font-family:'Inter',sans-serif; font-size:12px; font-weight:600; cursor:pointer; white-space:nowrap;">
+            ↓ Export CSV
+          </button>
+        </div>
+        <div style="font-size:10px; color:#94a3b8; margin-top:6px;">
+          Downloads one row per message event — ready for analysis
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-note">⚡ Swap in Perspective API key (line 4 of script) to activate live scoring</div>
+</div>
+
+<div class="success-flash" id="success-flash">✓ Message sent</div>
+
+<script>
+const THRESHOLD_WARN  = 0.30;  // 0–30%: acceptable, send freely
+const THRESHOLD_BLOCK = 0.60;  // 30–60%: caution zone, send disabled
+const THRESHOLD_HIGH  = 0.80;  // 60–80%: harmful, blocked + warning
+                                // 80%+:   severely toxic, strong warning
+const PERSPECTIVE_API_KEY = null;
+
+// ── REMOTE STUDY CONFIG ──────────────────────────────────────────────────────
+// 1. Deploy your Google Apps Script (see setup guide) and paste the URL below
+const SHEETS_WEBHOOK_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
+// 2. Paste your post-session survey URL below (with ?pid= at the end)
+const SURVEY_URL = 'YOUR_SURVEY_URL_HERE?pid=';
+
+// ── READ CONDITION & PARTICIPANT ID FROM URL ─────────────────────────────────
+// Share links:
+//   ?condition=control&pid=P01
+//   ?condition=experimental&pid=P01
+const urlParams = new URLSearchParams(window.location.search);
+const urlCondition = urlParams.get('condition') || 'typeblock';
+const urlPid       = urlParams.get('pid') || 'UNKNOWN';
+// Normalise: 'experimental' → 'typeblock' (internal name), 'control' → 'control'
+let mode = urlCondition === 'control' ? 'control' : 'typeblock';
+
+// Show a neutral badge — never reveals condition name to participant
+document.getElementById('condition-badge').textContent = 'SESSION ACTIVE';
+
+const scenarios = [
+  { type: 'Provocation',  text: "Someone just posted a negative comment about your work online, calling it 'lazy and poorly done.' How do you respond to them publicly?" },
+  { type: 'Conflict',     text: "A classmate keeps interrupting you in group discussions and takes credit for your ideas. Write a message to them directly." },
+  { type: 'Frustration',  text: "You are upset with a friend who cancelled plans at the last minute for the third time this month. Send them a message." },
+  { type: 'Defamation',   text: "Someone online has been spreading false rumours about you. Write a public reply to set the record straight." }
+];
+
+// Richer per-scenario tracking
+const scenarioTracking = scenarios.map(() => ({
+  firstDraftScore: null,
+  editCount: 0,
+  startTime: null,
+  completed: false,
+  obfuscationSeen: false,
+}));
+
+let currentScenario = 0, analysisTimer = null;
+const SESSION_ID = Date.now().toString(36).toUpperCase();
+let lastScore = 0, isFlagged = false;
+let stats = { sent: 0, blocked: 0, abandoned: 0 };
+let logItems = [];
+
+// ── NORMALIZATION ENGINE (4-layer) ────────────────────────────────────────
+
+// LAYER 1: Leet speak substitution
+const leetMap = [[/[@4]/g,'a'],[/3/g,'e'],[/[1!]/g,'i'],[/0/g,'o'],[/[5$]/g,'s'],[/7/g,'t'],[/#/g,'h'],[/\+/g,'t']];
+function leetNormalize(t) {
+  let n = t.toLowerCase();
+  leetMap.forEach(([p,r]) => n = n.replace(p,r));
+  return n;
+}
+
+// Core deduplication — MUST happen before fuzzy matching
+// Biiitchhhh → bitch, Diiick → dick, shiiit → shit
+function deduplicate(t) {
+  return t.toLowerCase()
+    .replace(/(.)\1+/g, '$1');
+}
+
+// Strip all non-alpha chars: b*tch → btch, B***ch → bch
+function stripSymbols(t) {
+  return t.toLowerCase().replace(/[^a-z\s]/g, '');
+}
+
+// Consonant skeleton: bitch → btch, whore → whr
+function consonantSkeleton(t) {
+  return t.toLowerCase().replace(/[aeiou]/g, '').replace(/[^a-z]/g, '');
+}
+
+// LAYER 2: Wildcard regex — * and symbols between letters
+// FIX: now treats each * as matching exactly one letter (not zero)
+// so B***ch matches b-i-t-c-h (3 wildcards = 3 letters: i,t,c)
+function wordToWildcardRegex(word) {
+  // Build regex where each char in word can be preceded by 0-3 non-alpha symbols
+  const chars = word.split('').map(c => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  // Between each letter, allow 0-3 symbols/wildcards
+  return new RegExp(chars.join('[^a-zA-Z\\s]{0,3}'), 'i');
+}
+
+// Also try matching after stripping all symbols from input, then compare consonant skeletons
+// b***ch → bch — check if toxic word's consonant skeleton starts/ends the same
+function consonantSkeleton(t) {
+  return t.toLowerCase().replace(/[aeiou]/g, '').replace(/[^a-z]/g, '');
+}
+
+// LAYER 3: Phonetic normalization for sound-alike variants
+function phoneticNormalize(t) {
+  return t.toLowerCase()
+    .replace(/ck|cc|kk/g, 'k')
+    .replace(/ph/g, 'f')
+    .replace(/[aeiou]+/g, 'a')   // bish → bash shape, bich → bach
+    .replace(/(.)\1+/g, '$1')    // deduplicate vowel runs
+    .replace(/[^a-z]/g, '');
+}
+
+// LAYER 4: Levenshtein fuzzy distance — tighter tolerances to kill false positives
+function levenshtein(a, b) {
+  const m = a.length, n = b.length;
+  const dp = Array.from({length: m+1}, (_,i) => Array.from({length: n+1}, (_,j) => j===0?i:0));
+  for (let j=1;j<=n;j++) dp[0][j]=j;
+  for (let i=1;i<=m;i++)
+    for (let j=1;j<=n;j++)
+      dp[i][j] = a[i-1]===b[j-1] ? dp[i-1][j-1] : 1+Math.min(dp[i-1][j],dp[i][j-1],dp[i-1][j-1]);
+  return dp[m][n];
+}
+
+function fuzzyMatchesWord(inputToken, toxicWord) {
+  const lenDiff = Math.abs(inputToken.length - toxicWord.length);
+  if (lenDiff > 2) return false;
+  // ≤3 chars: exact match only — prevents "di"→"die", "who"→"whore" etc
+  if (toxicWord.length <= 3) return inputToken === toxicWord;
+  // 4 chars: exact only after normalization
+  if (toxicWord.length === 4) return inputToken === toxicWord;
+  // 5 chars: max 1 edit, input must be at least 4 chars
+  if (toxicWord.length === 5) return inputToken.length >= 4 && levenshtein(inputToken, toxicWord) <= 1;
+  // 6+ chars: max 2 edits, input must be at least 5 chars
+  return inputToken.length >= 5 && levenshtein(inputToken, toxicWord) <= 2;
+}
+
+function hasObfuscation(t) {
+  return /[a-zA-Z][!@#\$\*\.\-\_\^]{1,3}[a-zA-Z]/.test(t);
+}
+
+// Evasion phrases — normalized before matching so "f@ off" → "fa off" → matches "f off"
+const evasionPhrases = [
+  'f off','f u','fu','eff off','eff you','foff','fa off',
+  'b word','the b word','a-hole','ahole','s-word','f-word','c-word',
+  'jack ass','jackass',
+];
+
+function matchesEvasionPhrase(text) {
+  const norm = leetNormalize(stripSymbols(deduplicate(text))).trim();
+  const orig = text.toLowerCase().trim();
+  return evasionPhrases.some(phrase => {
+    const p = leetNormalize(stripSymbols(phrase));
+    return norm.includes(p) || orig.includes(phrase);
+  });
+}
+
+// Whitelist — words that must NEVER trigger toxic detection
+// Expanded to cover common innocent words that phonetically collapse
+// into near-matches of toxic words (e.g. "ideas"→"adas" ≈ "idiot"→"adat",
+// "business"→"basanas" ≈ "useless"→"asalas")
+const whitelist = new Set([
+  // Very short tokens — always innocent
+  'who','di','hi','do','go','no','ok','la','ma','pa','ba','da','fi','lo','mo','ho','bi',
+  // 2–3 letter function words
+  'as','if','of','me','my','by','at','be','he','we','it','is','an','am','or','so','up',
+  'its','the','and','but','for','not','are','was','has','had','her','his','our','can',
+  'did','got','let','put','set','use','way','may','say','see','too','yet','now','off',
+  'out','own','per','age','ago','air','all','ask','bay','big','bit','boy','car','day',
+  'end','far','few','get','guy','hit','hot','how','job','key','kid','law','lay','led',
+  'lie','low','man','men','met','new','old','one','pay','ran','run','sit','six',
+  'ten','top','try','two','win','won','yes',
+  // Common innocent words that cause phonetic false positives
+  'ideas','idea','ideal','business','busines',
+  'appreciate','appreciated','appreciating','appreciation',
+  'stealing','taken','taking','takes','took',
+  'credit','noticed','notice','notices','noticeable',
+  'interrupting','interrupted','interrupt','interrupts','interruption',
+  'please','thanks','thank','thankful',
+  'least','could','would','should','might','shall',
+  'cite','citing','cited','cites',
+  'stay','stays','stayed','staying',
+  'serious','seriously','situation','situations',
+  'question','questions','answer','answers','mention','mentions','issue','issues',
+  'better','matter','matters','water','later','after','other','either','together',
+  'understand','understanding','opportunity','opportunities',
+  'important','importance','whatever','whenever','wherever','however',
+  'consider','considering','perhaps','forward','information','different','experience',
+  'absolutely','actually','basically','certainly','clearly','definitely',
+  'generally','hopefully','naturally','obviously','probably','recently',
+  'simply','usually','already','almost','always','again','about','above','across',
+  'direct','directly','frustrating','frustrated','frustration',
+  'cutting','cut','giving','give','keeps','keeping','keep',
+  'happening','happens','happen','repeated','repeating','repeat',
+  'proper','properly','discuss','discussions','discussing','discussed',
+  'ensure','ensuring','making','make','having','have','getting','get',
+  'saying','said','telling','told','feeling','felt','thinking','thought',
+  'meaning','means','needing','needed','wanting','wanted','trying','tried',
+  'coming','came','going','went','being','doing','done','seeing','saw',
+  'knowing','knew','taking',
+  // Specifically flagged innocent tokens from live testing
+  'when','hear','hears','heard','weren','mine','more','stop','sure','us','shared',
+  'once','moving','respectful','things','forward','discussions','credit',
+  'okay','need','needs','make','their','there','these','those',
+  'then','than','that','this','will','with','well','were','want',
+  'wait','very','upon','until','under','since','same','over',
+  'only','next','much','most','many','like','just','into','from',
+  'ever','even','each','done','come','both','been','back','also',
+]);
+
+// Master match — all layers with whitelist guard
+function matchesToxicWord(text, toxicWord) {
+  const deduped = deduplicate(text);
+  const dedupedToxic = deduplicate(toxicWord);
+  const tokens = deduped.toLowerCase().split(/\s+/);
+
+  // Single whitelisted word — skip entirely
+  if (tokens.length === 1 && whitelist.has(tokens[0].replace(/[^a-z]/g,''))) return false;
+
+  // Layer 1a: leet — word boundaries for short toxic words to prevent
+  // "ass" matching inside "class","pass","lass" etc.
+  // IMPORTANT: run on ORIGINAL text (not deduped) for short words,
+  // because dedup collapses "ass" → "as" which breaks boundary matching.
+  const leetText   = leetNormalize(deduped);
+  const leetOrig   = leetNormalize(text);
+  const leetToxic  = leetNormalize(dedupedToxic);
+  const leetToxOrig= leetNormalize(toxicWord);
+  if (toxicWord.length <= 4) {
+    const boundary = new RegExp('\\b' + leetToxOrig.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '\\b', 'i');
+    if (boundary.test(leetOrig)) return true;
+  } else {
+    if (leetText.includes(leetToxic)) return true;
+    if (leetOrig.includes(leetToxOrig)) return true;
+  }
+
+  // Layer 1c: symbol-stripped — word boundary for short words
+  const stripped = stripSymbols(deduped);
+  const toxicStripped = stripSymbols(toxicWord);
+  if (toxicStripped.length <= 4) {
+    if (new RegExp('\\b' + toxicStripped + '\\b').test(stripSymbols(text))) return true;
+  } else if (toxicStripped.length >= 5) {
+    if (stripped.includes(toxicStripped)) return true;
+  }
+
+  // Layer 1d: consonant skeleton — only for toxic words 5+ chars
+  if (toxicWord.length >= 5) {
+    const inputSkel = consonantSkeleton(stripSymbols(text));
+    const toxicSkel = consonantSkeleton(toxicWord);
+    if (toxicSkel.length >= 3 && inputSkel.includes(toxicSkel)) return true;
+    if (toxicSkel.length >= 3 && Math.abs(inputSkel.length - toxicSkel.length) <= 1) {
+      if (levenshtein(inputSkel, toxicSkel) <= 1) return true;
+    }
+  }
+
+  // Layer 2: wildcard regex
+  if (wordToWildcardRegex(toxicWord).test(text)) return true;
+
+  // Layer 3+4: fuzzy phonetic per token
+  // Tightened length guard: raw lengths must be within 1 char (was 2).
+  // "more"(4) vs "moron"(5) = diff 1 still passes, but phonetic collapse
+  // "more"→"mara" vs "moron"→"maran" d=1 was the bug.
+  // Additional guard: phonetic collapsed forms must also differ by ≤1 char in length.
+  const phoneticToxic = phoneticNormalize(toxicWord);
+  for (const token of tokens) {
+    const bare = token.replace(/[^a-z]/g,'');
+    if (whitelist.has(bare)) continue;
+    const cleanToken = stripSymbols(token);
+    const phoneticToken = phoneticNormalize(token);
+
+    // Raw length guard: token must be at least as long as the toxic word
+    // (shorter tokens can't phonetically match longer toxic words after collapse)
+    // "more"(4) can't match "moron"(5); "ugly"(4) can match "ugly"(4)
+    const rawLenDiff = Math.abs(bare.length - toxicWord.length);
+    if (rawLenDiff > 2) continue;
+    if (bare.length < toxicWord.length - 1) continue; // too short to be a match
+
+    // Phonetic collapsed length guard
+    const phonLenDiff = Math.abs(phoneticToken.length - phoneticToxic.length);
+    if (phonLenDiff > 1) continue;
+
+    if (cleanToken.length >= 4 && fuzzyMatchesWord(cleanToken, dedupedToxic)) return true;
+    if (phoneticToken.length >= 3 && fuzzyMatchesWord(phoneticToken, phoneticToxic)) return true;
+  }
+  return false;
+}
+
+// ── STAGE 0 — PHONETIC SUBSTITUTE DETECTION ──────────────────────────────
+// Catches real-word sound-alike substitutions: "ducking" → "fucking",
+// "shirt" → "shit", "batch" → "bitch", etc.
+// These are real dictionary words that evade all character-level checks.
+
+const phoneticSubstitutes = {
+  // fuck variants
+  'fucking':  'fucking', 'ducking':'fucking', 'forking':'fucking',
+  'freaking': 'fucking', 'fricking':'fucking', 'fudging':'fucking',
+  'flipping': 'fucking', 'frigging':'fucking', 'fecking':'fucking',
+  // shit variants
+  'shirt': 'shit', 'shoot': 'shit', 'shite': 'shit',
+  'sugar': 'shit', 'sheet': 'shit', 'sheesh': 'shit',
+  // bitch variants
+  'batch':  'bitch', 'botch': 'bitch', 'witch': 'bitch',
+  'biotch': 'bitch', 'biatch':'bitch',
+  // ass variants
+  'ask':  'ass',  'asset': 'ass',
+  // damn variants
+  'dang': 'damn', 'darn': 'damn', 'dam': 'damn',
+  // hell variants
+  'heck': 'hell', 'heel': 'hell',
+  // dick variants
+  'deck': 'dick', 'rick': 'dick', 'tick': 'dick',
+  // crap variants
+  'crop': 'crap', 'carp': 'crap',
+  // bastard variants
+  'blasted': 'bastard', 'blastard': 'bastard',
+  // idiot variants
+  'idjit': 'idiot', 'eejit': 'idiot',
+  // stupid variants
+  'stewpid': 'stupid', 'stoopid': 'stupid',
+  // whore variants
+  'hore': 'whore', 'wore': 'whore',
+  // slut variants
+  'slot': 'slut', 'slat': 'slut',
+  // kill variants
+  'keel': 'kill', 'gill': 'kill',
+  // hate variants
+  'hait': 'hate', 'h8': 'hate',
+  // die variants
+  'dye': 'die',
+};
+
+// Context gate — only trigger phonetic substitution when the sentence
+// shows aggressive intent. Prevents "sugar in my coffee", "she's a witch",
+// "I dye my hair" from being flagged as phonetic evasion.
+// Words that are almost always used as evasion (no innocent context) are exempt.
+const noContextNeeded = new Set([
+  'ducking','forking','freaking','fricking','fudging','frigging','fecking',
+  'biotch','biatch','blasted','blastard','idjit','eejit','stewpid','stoopid',
+  'hore','keel',
+]);
+
+function hasAggressiveContext(text) {
+  const lower = text.toLowerCase();
+  return (
+    // "you are such a / you are so / you're such a / you little"
+    /\b(you|ur|u)\b.{0,20}\b(are|r|is|were|such|so|little|complete|total|absolute)\b/i.test(text)
+  ) ||
+  // "what the [word]" exclamation pattern
+  /\bwhat\s+the\s+\w+/i.test(lower) ||
+  // "go [word] yourself" pattern
+  /\bgo\b.{0,15}\byourself\b/i.test(lower) ||
+  // Second-person hate / disgust
+  /\b(hate|sick of|fed up|tired of|can'?t stand|despise)\b.{0,20}\b(you|ur|u)\b/i.test(lower) ||
+  // Soft insult + second-person pronoun
+  (
+    /\b(you|ur|u|your)\b/i.test(text) &&
+    /\b(idiot|moron|fool|loser|pathetic|worthless|useless|stupid|dumb|ugly|trash|garbage|clown|joke)\b/i.test(lower)
+  ) ||
+  // Punctuation / caps aggression
+  /[!?]{2,}/.test(text) ||
+  (text === text.toUpperCase() && text.replace(/\s/g,'').length > 4);
+}
+
+// Returns text with phonetic substitutes replaced by their canonical toxic form
+// e.g. "you're such a ducking idiot" → "you're such a fucking idiot"
+// Deduplication runs first on each token so "duckiiiinggg" → "ducking" → caught
+// Context gate prevents innocent words like "sugar","witch","slot" from triggering
+function phoneticSubstitute(text) {
+  const words = text.toLowerCase().split(/\b/);
+  let substitutionFound = false;
+  const aggressiveCtx = hasAggressiveContext(text);
+
+  const result = words.map(word => {
+    const deduped = word.replace(/(.)\1+/g, '$1'); // duckiiiinggg → ducking
+    const clean = deduped.replace(/[^a-z]/g, '');
+    if (phoneticSubstitutes[clean]) {
+      // High-confidence evasion words fire regardless of context
+      // Ambiguous words (sugar, witch, slot) only fire with aggressive context
+      if (noContextNeeded.has(clean) || aggressiveCtx) {
+        substitutionFound = true;
+        return word.replace(/[a-zA-Z]+/, phoneticSubstitutes[clean]);
+      }
+    }
+    return word;
+  }).join('');
+  return { text: result, substitutionFound };
+}
+
+// ── SENTENCE-LEVEL CONTEXT SCORING ───────────────────────────────────────
+// Analyses the whole sentence for aggressive intent, even when individual
+// words are clean. Catches: "you are such a ducking loser", "go duck yourself",
+// "what the shirt is wrong with you", second-person directed insults, etc.
+
+// Aggression indicators — requires clear hostile intent, not just second-person
+const aggressionSignals = [
+  // "you are [explicit insult]" — must have a specific degrading word nearby
+  /\b(you|ur|u)\b.{0,20}\b(useless|worthless|pathetic|disgusting|horrible|stupid|dumb|ugly|fat|trash|garbage|loser|failure|idiot|moron|fool|clown)\b/i,
+  // Explicit imperative aggression commands
+  /\b(get out|go away|shut your|back off|stay away)\b/i,
+  // Threat patterns — must include actual violence/harm verb
+  /\b(will|gonna|going to|im going to|i will)\b.{0,20}\b(hurt|destroy|ruin|kill|beat|punch)\b/i,
+  // Collective contempt — "everyone hates you"
+  /\b(nobody|no one|everyone|people)\b.{0,20}\b(hates?|despises?|can'?t stand)\b.{0,15}\b(you|ur|u)\b/i,
+  // Direct second-person hate declaration
+  /\bi\s+(hate|despise|can'?t stand)\s+(you|ur|u)\b/i,
+];
+
+// Amplifier words that raise intensity of surrounding context
+const amplifiers = [
+  'so', 'such a', 'such', 'total', 'complete', 'absolute',
+  'literally', 'seriously', 'honestly', 'genuinely', 'truly',
+  'completely', 'utterly', 'absolutely', 'pathetically',
+];
+
+// Soft insults — degrading even without explicit slurs
+const softInsults = [
+  'loser','idiot','moron','fool','clown','joke','pathetic','disgusting',
+  'worthless','useless','garbage','trash','waste','failure','stupid',
+  'dumb','ugly','fat','horrible','terrible','awful','embarrassing',
+];
+
+function sentenceContextScore(text) {
+  const lower = text.toLowerCase();
+  let contextBoost = 0;
+  let signals = [];
+
+  // Check aggression patterns
+  for (const pattern of aggressionSignals) {
+    if (pattern.test(lower)) {
+      contextBoost += 0.15;
+      signals.push('directed_aggression');
+      break;
+    }
+  }
+
+  // Amplifier + soft insult + second-person — all three must be present
+  // "you are such a loser" YES / "this is such a terrible situation" NO
+  const hasAmplifier = amplifiers.some(a => lower.includes(a));
+  const hasSoftInsult = softInsults.some(s => {
+    // insult must appear as a standalone word, not inside another word
+    return new RegExp('\\b' + s + '\\b').test(lower);
+  });
+  const isSecondPerson = /\b(you|ur|u)\b/i.test(text);
+  if (hasAmplifier && hasSoftInsult && isSecondPerson) {
+    contextBoost += 0.12;
+    signals.push('amplified_insult');
+  }
+
+  // Direct hate declaration — "I hate you", "I can't stand you"
+  // Must have subject + hate verb + "you" in close proximity
+  const hasDirectHate = /\b(i\s+hate|i\s+despise|i\s+can'?t\s+stand|sick\s+of\s+you|fed\s+up\s+with\s+you)\b/i.test(lower);
+  if (hasDirectHate) {
+    contextBoost += 0.18;
+    signals.push('direct_hate');
+  }
+
+  // Phonetic substitution — real-word evasion is itself a strong intent signal
+  const { substitutionFound } = phoneticSubstitute(text);
+  if (substitutionFound) {
+    contextBoost += 0.20;
+    signals.push('phonetic_substitution');
+  }
+
+  // Multiple exclamation / question marks
+  const punctCount = (text.match(/[!?]/g) || []).length;
+  if (punctCount >= 3) contextBoost += 0.08;
+
+  return { boost: Math.min(contextBoost, 0.45), signals };
+}
+
+// ── HIGHLIGHT ENGINE — finds which words/phrases triggered the score ──────
+// Returns array of {word, start, end, tier} objects for rendering highlights
+
+function getTriggeredWords(text) {
+  const found = []; // {word, start, end, tier}
+  const lower = text.toLowerCase();
+
+  // Helper: find all occurrences of a phrase in text (case-insensitive)
+  function findOccurrences(phrase, tier) {
+    const pLower = phrase.toLowerCase();
+    let idx = lower.indexOf(pLower);
+    while (idx !== -1) {
+      // Check it's not inside a whitelisted token
+      const token = text.slice(idx, idx + phrase.length).replace(/[^a-zA-Z]/g,'').toLowerCase();
+      if (!whitelist.has(token)) {
+        found.push({ word: phrase, start: idx, end: idx + phrase.length, tier });
+      }
+      idx = lower.indexOf(pLower, idx + 1);
+    }
+  }
+
+  // Check multi-word phrases first (tier1 and tier2 phrases)
+  [...tier1, ...tier2].filter(w => w.includes(' ')).forEach(phrase => {
+    if (lower.includes(phrase.toLowerCase())) {
+      const tier = tier1.includes(phrase) ? 1 : 2;
+      findOccurrences(phrase, tier);
+    }
+  });
+
+  // Check single words per token
+  const tokens = text.split(/\b/);
+  let pos = 0;
+  for (const token of tokens) {
+    const bare = token.replace(/[^a-zA-Z]/g,'').toLowerCase();
+    if (bare.length >= 2 && !whitelist.has(bare)) {
+      // Check if this token matches any toxic word
+      if (tier1.filter(w => !w.includes(' ')).some(w => matchesToxicWord(token, w))) {
+        // Only add if not already covered by a phrase
+        if (!found.some(f => pos >= f.start && pos < f.end)) {
+          found.push({ word: bare, start: pos, end: pos + token.length, tier: 1 });
+        }
+      } else if (tier2.filter(w => !w.includes(' ')).some(w => matchesToxicWord(token, w))) {
+        if (!found.some(f => pos >= f.start && pos < f.end)) {
+          found.push({ word: bare, start: pos, end: pos + token.length, tier: 2 });
+        }
+      } else if (tier3.some(w => matchesToxicWord(token, w))) {
+        if (!found.some(f => pos >= f.start && pos < f.end)) {
+          found.push({ word: bare, start: pos, end: pos + token.length, tier: 3 });
+        }
+      }
+    }
+    pos += token.length;
+  }
+
+  // Also flag phonetic substitutions
+  const phoneticWords = text.split(/\b/);
+  let ppos = 0;
+  for (const token of phoneticWords) {
+    const bare = token.replace(/[^a-zA-Z]/g,'').toLowerCase();
+    if (bare.length >= 3) {
+      const deduped = bare.replace(/(.)\1+/g,'$1');
+      if (phoneticSubstitutes[deduped] && !whitelist.has(deduped)) {
+        if (!found.some(f => ppos >= f.start && ppos < f.end)) {
+          found.push({ word: bare, start: ppos, end: ppos + token.length, tier: 1, phonetic: true });
+        }
+      }
+    }
+    ppos += token.length;
+  }
+
+  // Add context-level signals (underline whole phrases)
+  const contextPatterns = [
+    /\b(you|ur|u)\b.{0,20}\b(useless|worthless|pathetic|disgusting|horrible|stupid|dumb|ugly|fat|trash|garbage|loser|failure|idiot|moron|fool)\b/gi,
+    /\b(hate|sick of|fed up|tired of|can'?t stand|despise)\b.{0,20}\b(you|ur|u)\b/gi,
+    /\b(will|gonna|going to)\b.{0,20}\b(hurt|destroy|ruin|kill|beat)\b/gi,
+  ];
+  contextPatterns.forEach(pattern => {
+    let m;
+    pattern.lastIndex = 0;
+    while ((m = pattern.exec(text)) !== null) {
+      if (!found.some(f => m.index >= f.start && m.index < f.end)) {
+        found.push({ word: m[0], start: m.index, end: m.index + m[0].length, tier: 'context' });
+      }
+    }
+  });
+
+  return found;
+}
+
+// ── UPDATE MIRROR HIGHLIGHTS ──────────────────────────────────────────────
+function updateHighlights(text, triggeredWords) {
+  const mirror = document.getElementById('textarea-mirror');
+
+  if (!text.trim() || triggeredWords.length === 0) {
+    mirror.innerHTML = escapeHtml(text);
+    return;
+  }
+
+  // Sort by start position, remove overlaps
+  const sorted = triggeredWords
+    .sort((a, b) => a.start - b.start)
+    .filter((w, i, arr) => i === 0 || w.start >= arr[i-1].end);
+
+  // Build highlighted HTML
+  let html = '';
+  let cursor = 0;
+  for (const match of sorted) {
+    if (match.start > cursor) {
+      html += escapeHtml(text.slice(cursor, match.start));
+    }
+    const cls = match.phonetic ? 'highlight-tier1' :
+                match.tier === 1 ? 'highlight-tier1' :
+                match.tier === 2 ? 'highlight-tier2' :
+                match.tier === 3 ? 'highlight-tier3' : 'highlight-context';
+    html += `<mark class="${cls}">${escapeHtml(text.slice(match.start, match.end))}</mark>`;
+    cursor = match.end;
+  }
+  if (cursor < text.length) html += escapeHtml(text.slice(cursor));
+  mirror.innerHTML = html;
+
+  // Sync mirror height with textarea
+  const ta = document.getElementById('msg-input');
+  mirror.style.height = ta.style.height || '';
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>').replace(/ /g,'&nbsp;');
+}
+
+// ── TOXICITY WORD LISTS ───────────────────────────────────────────────────
+
+// Tier 1 — explicit slurs and severe abuse (score 0.82–0.97)
+const tier1 = [
+  // Explicit slurs
+  'asshole','jackass','dick','bitch','fuck','cunt','bastard','whore','slut',
+  // Severe phrases
+  'kill','go die','die','go to hell','piece of shit','stupid idiot',
+  'hate you','shut up','worthless','loser','ugly','fat','retard','moron',
+  'idiot','pathetic','disgusting','trash','garbage','dumb',
+  // "piece of" compound constructions — catches "piece of trash/garbage/crap/rat ass"
+  'piece of trash','piece of garbage','piece of crap','piece of work',
+  // "son of" constructions
+  'son of a bitch','son of a',
+  // Short but explicit
+  'ass',
+];
+
+// Tier 2 — dismissive, degrading, hostile (score 0.52–0.67)
+const tier2 = [
+  'annoying','lazy','awful','terrible','horrible','worst','useless','failure',
+  'embarrassing','ridiculous','stupid','lame','jerk','fake','liar','creep','hate',
+  // Dismissive terms — "you little brat", "you little pest" etc.
+  'brat','pest','nuisance','scum','coward','spineless','pathetic little',
+  'grow up','get lost','back off','leave me alone','mind your business',
+  'none of your business','not your place','who do you think',
+];
+
+// Tier 3 — frustrated or upset tone (score 0.18–0.33)
+const tier3 = ['frustrated','angry','upset','disappointed','unfair','wrong'];
+
+// ── COMPOUND PHRASE SCORER ────────────────────────────────────────────────
+// Catches multi-word abuse patterns that individual word matching misses:
+// "you little brat", "piece of rat ass", "you piece of", "what a loser you are"
+function compoundPhraseScore(text) {
+  const lower = text.toLowerCase().replace(/[^a-z\s]/g, ' ');
+  // "you little [X]" — dismissive/belittling
+  if (/\byou\s+little\s+\w+/.test(lower)) return 0.62;
+  // "piece of [insult/body part]" — excludes innocent uses like "piece of cake"
+  if (/\bpiece\s+of\s+(trash|garbage|crap|junk|rat|dirt|work|nothing|filth|rubbish)\b/.test(lower)) return 0.78;
+  // "you [X] of a [Y]" — "you son of a..."
+  if (/\byou\s+\w+\s+of\s+a\b/.test(lower)) return 0.85;
+  // "what a [insult] you are / what a [insult] he/she is"
+  if (/\bwhat\s+a\s+(loser|idiot|fool|clown|brat|jerk|creep|moron|pathetic)\b/.test(lower)) return 0.65;
+  // "you are nothing but a [X]" / "you're nothing but"
+  if (/\b(you|ur|u)\b.{0,8}\bnothing\s+but\b/.test(lower)) return 0.68;
+  // "[insult] like you" — "losers like you", "idiots like you"
+  if (/\b(loser|idiot|fool|clown|brat|pest|trash|garbage|scum|jerk|creep)s?\s+like\s+(you|u)\b/.test(lower)) return 0.72;
+  return 0;
+}
+
+function simulateScore(text) {
+  // Stage 0a: Run phonetic substitute detection first
+  const { text: phoneticNorm, substitutionFound } = phoneticSubstitute(text);
+  const textToScore = phoneticNorm;
+
+  let max = 0;
+
+  // Word-level matching (all tiers)
+  tier1.forEach(w => { if (matchesToxicWord(textToScore, w)) max = Math.max(max, 0.82 + Math.random()*0.15); });
+  tier2.forEach(w => { if (matchesToxicWord(textToScore, w)) max = Math.max(max, 0.52 + Math.random()*0.15); });
+  tier3.forEach(w => { if (matchesToxicWord(textToScore, w)) max = Math.max(max, 0.18 + Math.random()*0.15); });
+
+  // Evasion phrases
+  if (matchesEvasionPhrase(textToScore)) max = Math.max(max, 0.78 + Math.random()*0.15);
+
+  // Compound phrase matching — "you little brat", "piece of rat ass", etc.
+  const compoundScore = compoundPhraseScore(textToScore);
+  if (compoundScore > 0) max = Math.max(max, compoundScore + Math.random()*0.05);
+
+  // Stage 0b: Sentence-level context scoring — runs on ORIGINAL text
+  const { boost: contextBoost, signals } = sentenceContextScore(text);
+  max = Math.min(1, max + contextBoost);
+
+  // If phonetic substitution was found but no word match yet,
+  // ensure minimum score reflects evasion intent
+  if (substitutionFound && max < THRESHOLD_BLOCK) {
+    max = Math.max(max, THRESHOLD_BLOCK + Math.random() * 0.15);
+  }
+
+  // Classic tone boosters
+  if (/[!?]{2,}/.test(text)) max = Math.min(1, max + 0.10);
+  if (text === text.toUpperCase() && text.replace(/\s/g,'').length > 5) max = Math.min(1, max + 0.08);
+  if (hasObfuscation(text)) max = Math.min(1, max + 0.12);
+
+  return Math.round(max * 100) / 100;
+}
+
+async function getScore(text) {
+  if (!text.trim()) return 0;
+  /* --- LIVE MODE ---
+  if (PERSPECTIVE_API_KEY) {
+    const r = await fetch(`https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze?key=${PERSPECTIVE_API_KEY}`,
+      { method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ comment:{text}, languages:['en'], requestedAttributes:{TOXICITY:{}} }) });
+    const d = await r.json();
+    return d.attributeScores.TOXICITY.summaryScore.value;
+  } */
+  await new Promise(r => setTimeout(r, 160 + Math.random()*120));
+  return simulateScore(text);
+}
+
+function setMode(m) { /* condition locked from URL — no manual toggle */ }
+
+function buildScenarios() {
+  const nav = document.getElementById('scenario-nav');
+  scenarios.forEach((s, i) => {
+    const b = document.createElement('button');
+    b.className = 'scenario-btn' + (i === 0 ? ' active' : '');
+    b.id = `scenario-btn-${i}`;
+    b.textContent = `${i + 1}. ${s.type}`;
+    b.onclick = () => selectScenario(i);
+    nav.appendChild(b);
+  });
+  document.getElementById('scenario-text').textContent = scenarios[0].text;
+  document.getElementById('scenario-counter').textContent = `Scenario 1 of ${scenarios.length} - ${scenarios[0].type}`;
+  scenarioTracking[0].startTime = Date.now();
+}
+
+function selectScenario(i) {
+  currentScenario = i;
+  document.getElementById('scenario-text').textContent = scenarios[i].text;
+  document.getElementById('scenario-counter').textContent = `Scenario ${i+1} of ${scenarios.length} - ${scenarios[i].type}`;
+  document.querySelectorAll('.scenario-btn').forEach((b, j) => {
+    b.classList.toggle('active', j === i);
+  });
+  if (!scenarioTracking[i].startTime) scenarioTracking[i].startTime = Date.now();
+  clearMsg();
+}
+
+function handleInput() {
+  const el = document.getElementById('msg-input');
+  const text = el.value;
+  document.getElementById('char-count').textContent = `${text.length} / 500`;
+  const obf = hasObfuscation(text);
+  const { substitutionFound } = phoneticSubstitute(text);
+  const flagged = obf || substitutionFound;
+  document.getElementById('symbol-flag').style.display = flagged ? 'flex' : 'none';
+  if (flagged) scenarioTracking[currentScenario].obfuscationSeen = true;
+  document.getElementById('btn-abandon').style.display = text.length > 0 ? 'inline-flex' : 'none';
+  scenarioTracking[currentScenario].editCount++;
+
+  if (!text.trim()) { resetAnalysis(); return; }
+
+  document.getElementById('analysis-bar').classList.remove('hidden');
+  document.getElementById('tier-legend').style.display = 'flex';
+  document.getElementById('spinner').style.display = 'block';
+  document.getElementById('score-value').textContent = '...';
+  clearTimeout(analysisTimer);
+  analysisTimer = setTimeout(() => runAnalysis(text), 480);
+}
+
+async function runAnalysis(text) {
+  const score = await getScore(text);
+  lastScore = score;
+  document.getElementById('spinner').style.display = 'none';
+  const pct = Math.round(score * 100);
+
+  // Update highlights — show which words triggered the score
+  const triggered = getTriggeredWords(text);
+  updateHighlights(text, triggered);
+
+  // ── Three-tier colour system ──────────────────────────────────────────
+  // 0–30%:  green  — acceptable, send freely
+  // 30–60%: amber  — caution zone, send disabled in TYPEBLOCK mode
+  // 60–80%: orange — harmful, blocked + warning
+  // 80%+:   red    — severely toxic, strong warning
+  let barColor, valColor;
+  if (score < THRESHOLD_WARN) {
+    barColor = '#16a34a'; valColor = '#16a34a';       // green
+  } else if (score < THRESHOLD_BLOCK) {
+    barColor = '#d97706'; valColor = '#d97706';       // amber
+  } else if (score < THRESHOLD_HIGH) {
+    barColor = '#ea580c'; valColor = '#ea580c';       // orange
+  } else {
+    barColor = '#dc2626'; valColor = '#dc2626';       // red
+  }
+
+  document.getElementById('score-fill').style.width = pct + '%';
+  document.getElementById('score-fill').style.background = barColor;
+  document.getElementById('score-value').style.color = valColor;
+  document.getElementById('score-value').textContent = pct + '%';
+
+  const txt = document.getElementById('msg-input').value.trim();
+
+  if (mode !== 'typeblock') {
+    // Control mode — never block, no warnings
+    isFlagged = false;
+    document.getElementById('msg-input').classList.remove('flagged');
+    document.getElementById('warn-message').style.display = 'none';
+    document.getElementById('btn-send').disabled = !txt;
+    return;
+  }
+
+  // ── TYPEBLOCK mode — apply tiers ─────────────────────────────────────
+  if (score < THRESHOLD_WARN) {
+    // TIER 1: 0–30% — green, send freely
+    isFlagged = false;
+    document.getElementById('msg-input').classList.remove('flagged');
+    document.getElementById('warn-message').style.display = 'none';
+    document.getElementById('btn-send').disabled = !txt;
+
+  } else if (score < THRESHOLD_BLOCK) {
+    // TIER 2: 30–60% — amber caution border, send stays ENABLED
+    isFlagged = false;
+    document.getElementById('msg-input').style.borderColor = '#d97706';
+    document.getElementById('msg-input').style.background  = ''; // keep transparent
+    document.getElementById('msg-input').style.boxShadow  = '0 0 0 3px rgba(217,119,6,0.08)';
+    document.getElementById('msg-input').classList.remove('flagged');
+    document.getElementById('warn-message').style.display  = 'flex';
+    document.getElementById('warn-message').style.background = '#fffbeb';
+    document.getElementById('warn-message').style.borderColor = '#fde68a';
+    document.getElementById('warn-icon').textContent  = '⚠️';
+    document.getElementById('warn-title').textContent = 'This message has a cautionary tone.';
+    document.getElementById('warn-title').style.color = '#d97706';
+    document.getElementById('warn-body').textContent  = 'Some words may come across harshly. You can rephrase or send as-is.';
+    document.getElementById('btn-send').disabled = !txt;
+
+  } else if (score < THRESHOLD_HIGH) {
+    // TIER 3: 60–80% — orange, harmful
+    isFlagged = true;
+    document.getElementById('msg-input').classList.add('flagged');
+    document.getElementById('msg-input').style.borderColor = '';
+    document.getElementById('msg-input').style.background  = '';
+    document.getElementById('msg-input').style.boxShadow  = '';
+    document.getElementById('warn-message').style.display  = 'flex';
+    document.getElementById('warn-message').style.background = '#fff7ed';
+    document.getElementById('warn-message').style.borderColor = '#fed7aa';
+    document.getElementById('warn-icon').textContent  = '🚫';
+    document.getElementById('warn-title').textContent = 'This message may be harmful.';
+    document.getElementById('warn-title').style.color = '#ea580c';
+    document.getElementById('warn-body').textContent  = 'Please rephrase before sending. The send button will re-enable once the content passes the safety threshold.';
+    document.getElementById('btn-send').disabled = true;
+
+  } else {
+    // TIER 4: 80%+ — red, severely toxic
+    isFlagged = true;
+    document.getElementById('msg-input').classList.add('flagged');
+    document.getElementById('msg-input').style.borderColor = '';
+    document.getElementById('msg-input').style.background  = '';
+    document.getElementById('msg-input').style.boxShadow  = '';
+    document.getElementById('warn-message').style.display  = 'flex';
+    document.getElementById('warn-message').style.background = '#fef2f2';
+    document.getElementById('warn-message').style.borderColor = '#fecaca';
+    document.getElementById('warn-icon').textContent  = '🚫';
+    document.getElementById('warn-title').textContent = 'This message is harmful and cannot be sent.';
+    document.getElementById('warn-title').style.color = '#dc2626';
+    document.getElementById('warn-body').textContent  = 'This content contains language that violates community safety guidelines. Please rephrase completely before sending.';
+    document.getElementById('btn-send').disabled = true;
+  }
+}
+
+function resetAnalysis() {
+  document.getElementById('analysis-bar').classList.add('hidden');
+  document.getElementById('tier-legend').style.display = 'none';
+  document.getElementById('warn-message').style.display = 'none';
+  document.getElementById('symbol-flag').style.display = 'none';
+  document.getElementById('score-fill').style.width = '0%';
+  document.getElementById('score-value').textContent = '—';
+  document.getElementById('btn-send').disabled = true;
+  document.getElementById('btn-abandon').style.display = 'none';
+  document.getElementById('textarea-mirror').innerHTML = '';
+  const ta = document.getElementById('msg-input');
+  ta.classList.remove('flagged');
+  ta.style.borderColor = '';
+  ta.style.background  = '';
+  ta.style.boxShadow   = '';
+  isFlagged = false;
+}
+
+function clearMsg() {
+  document.getElementById('msg-input').value = '';
+  document.getElementById('char-count').textContent = '0 / 500';
+  clearTimeout(analysisTimer);
+  resetAnalysis();
+}
+
+function sendMsg() {
+  const text = document.getElementById('msg-input').value.trim();
+  if (!text) return;
+  addLog(text, lastScore, 'sent');
+  clearMsg();
+  const f = document.getElementById('success-flash');
+  f.classList.add('show');
+  setTimeout(() => f.classList.remove('show'), 2000);
+  checkSessionComplete();
+}
+
+function abandonMsg() {
+  const text = document.getElementById('msg-input').value.trim();
+  if (!text) return;
+  addLog(text, lastScore, 'abandoned');
+  clearMsg();
+  checkSessionComplete();
+}
+
+function addLog(text, score, status) {
+  stats[status]++;
+  const track = scenarioTracking[currentScenario];
+  if (track.firstDraftScore === null) track.firstDraftScore = score;
+  const timeSpent = track.startTime ? Math.round((Date.now() - track.startTime) / 1000) : 0;
+  if (status === 'sent' || status === 'abandoned') {
+    track.completed = true;
+    const btn = document.getElementById(`scenario-btn-${currentScenario}`);
+    if (btn) btn.classList.add('done');
+  }
+  logItems.unshift({
+    text, score, status, mode,
+    scenario: currentScenario,
+    scenarioType: scenarios[currentScenario].type,
+    firstDraftScore: track.firstDraftScore,
+    editCount: track.editCount,
+    timeSpentSeconds: timeSpent,
+    messageLength: text.length,
+    obfuscationDetected: track.obfuscationSeen,
+    ts: new Date().toISOString()
+  });
+  renderLog();
+  document.getElementById('export-area').style.display = 'block';
+  submitEventToSheets({
+    text, score, status,
+    scenario: currentScenario,
+    scenarioType: scenarios[currentScenario].type,
+    firstDraftScore: track.firstDraftScore,
+    editCount: track.editCount,
+    timeSpentSeconds: timeSpent,
+    messageLength: text.length,
+    obfuscationDetected: track.obfuscationSeen,
+  });
+}
+
+async function submitEventToSheets(item) {
+  if (!SHEETS_WEBHOOK_URL || SHEETS_WEBHOOK_URL === 'YOUR_APPS_SCRIPT_URL_HERE') return;
+  const payload = {
+    participant_id:       urlPid,
+    condition:            urlCondition,
+    scenario_index:       item.scenario + 1,
+    scenario_type:        item.scenarioType,
+    event_status:         item.status,
+    toxicity_score:       item.score,
+    first_draft_score:    item.firstDraftScore,
+    score_delta:          item.firstDraftScore !== null ? +(item.firstDraftScore - item.score).toFixed(3) : 0,
+    message_text:         item.text,
+    message_length:       item.messageLength,
+    edit_count:           item.editCount,
+    time_spent_seconds:   item.timeSpentSeconds,
+    obfuscation_detected: item.obfuscationDetected,
+    timestamp:            new Date().toISOString(),
+    session_id:           SESSION_ID,
+  };
+  try {
+    await fetch(SHEETS_WEBHOOK_URL, {
+      method: 'POST', mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+  } catch(e) { console.warn('Sheet submit failed:', e); }
+}
+
+function exportCSV() {
+  const headers = [
+    'participant_id','condition','scenario_index','scenario_type',
+    'event_status','toxicity_score','first_draft_score','score_delta',
+    'message_text','message_length','edit_count','time_spent_seconds',
+    'obfuscation_detected','timestamp','session_id'
+  ];
+  const rows = logItems.map(item => [
+    urlPid,
+    urlCondition,
+    item.scenario + 1,
+    item.scenarioType,
+    item.status,
+    item.score.toFixed(3),
+    item.firstDraftScore !== null ? item.firstDraftScore.toFixed(3) : '',
+    item.firstDraftScore !== null ? (item.firstDraftScore - item.score).toFixed(3) : '',
+    `"${item.text.replace(/"/g,'""')}"`,
+    item.messageLength,
+    item.editCount,
+    item.timeSpentSeconds,
+    item.obfuscationDetected,
+    item.ts,
+    SESSION_ID
+  ]);
+  const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `TYPEBLOCK_${urlPid}_${SESSION_ID}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function checkSessionComplete() {
+  const done = new Set(logItems.filter(i => i.status === 'sent' || i.status === 'abandoned').map(i => i.scenario));
+  if (done.size >= scenarios.length) showSessionEnd();
+}
+
+function showSessionEnd() {
+  document.getElementById('session-end').style.display = 'flex';
+}
+
+function goToSurvey() {
+  const target = SURVEY_URL !== 'YOUR_SURVEY_URL_HERE?pid='
+    ? SURVEY_URL + encodeURIComponent(urlPid) : null;
+  if (target) { window.location.href = target; }
+  else { alert('Survey URL not configured — please notify the researcher.'); }
+}
+
+function renderLog() {
+  const list = document.getElementById('log-list');
+  const empty = document.getElementById('log-empty');
+  const statsRow = document.getElementById('stats-row');
+  if (logItems.length === 0) { empty.style.display='block'; list.style.display='none'; statsRow.style.display='none'; return; }
+  empty.style.display = 'none'; list.style.display = 'flex'; statsRow.style.display = 'flex';
+  list.innerHTML = '';
+  logItems.forEach(item => {
+    const el = document.createElement('div');
+    el.className = `log-item ${item.status}`;
+    const label = item.status==='sent'?'SENT':item.status==='abandoned'?'ABANDONED':'BLOCKED';
+    const preview = item.text.length > 80 ? item.text.slice(0,80)+'…' : item.text;
+    el.innerHTML = `<span class="log-status">${label}</span><span class="log-content">${preview}</span><span class="log-score">${Math.round(item.score*100)}%</span>`;
+    list.appendChild(el);
+  });
+  document.getElementById('log-count').textContent = logItems.length;
+  document.getElementById('stat-sent').textContent = stats.sent;
+  document.getElementById('stat-blocked').textContent = stats.blocked;
+  document.getElementById('stat-abandoned').textContent = stats.abandoned;
+}
+
+// Track blocked attempts via Ctrl+Enter
+document.getElementById('msg-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.ctrlKey) {
+    if (!document.getElementById('btn-send').disabled) { sendMsg(); }
+    else if (isFlagged && mode === 'typeblock') {
+      stats.blocked++;
+      document.getElementById('stat-blocked').textContent = stats.blocked;
+      document.getElementById('stats-row').style.display = 'flex';
+      document.getElementById('log-empty').style.display = 'none';
+    }
+  }
+});
+
+buildScenarios();
+document.getElementById('display-session-id').textContent = SESSION_ID;
+
+// Sync mirror scroll with textarea scroll
+document.getElementById('msg-input').addEventListener('scroll', function() {
+  document.getElementById('textarea-mirror').scrollTop = this.scrollTop;
+});
+</script>
+
+<!-- Session End Overlay -->
+<div id="session-end" style="display:none; position:fixed; inset:0; background:rgba(15,23,42,0.6); z-index:200; align-items:center; justify-content:center; padding:24px;">
+  <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:14px; padding:40px 36px; max-width:480px; width:100%; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.15);">
+    <div style="font-size:40px; margin-bottom:16px;">✅</div>
+    <div style="font-size:11px; font-weight:600; letter-spacing:0.8px; color:#1a56db; text-transform:uppercase; margin-bottom:10px;">Session Complete</div>
+    <div style="font-size:19px; font-weight:600; color:#0f172a; margin-bottom:10px;">All scenarios done!</div>
+    <div style="font-size:13.5px; color:#64748b; margin-bottom:28px; line-height:1.6;">Thank you for completing all 4 scenarios. Your responses have been recorded. Please click below to proceed to the short survey — it takes about 5 minutes.</div>
+    <button onclick="goToSurvey()" style="width:100%; padding:13px; background:#1a56db; color:white; border:none; border-radius:8px; font-family:'Inter',sans-serif; font-size:14px; font-weight:600; cursor:pointer; margin-bottom:10px; box-shadow:0 2px 8px rgba(26,86,219,0.25);">
+      Continue to Survey →
+    </button>
+    <button onclick="exportCSV()" style="width:100%; padding:10px; background:transparent; color:#64748b; border:1px solid #e2e8f0; border-radius:8px; font-family:'Inter',sans-serif; font-size:13px; cursor:pointer;">
+      ↓ Also download session backup (CSV)
+    </button>
+    <div style="font-family:'JetBrains Mono',monospace; font-size:10px; color:#94a3b8; margin-top:12px;">Session ID: <span id="display-session-id"></span></div>
+  </div>
+</div>
+
+<div class="success-flash" id="success-flash">✓ Message sent</div>
+</body>
+</html>
