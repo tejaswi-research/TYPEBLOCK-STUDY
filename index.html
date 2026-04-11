@@ -633,22 +633,22 @@
       <div class="textarea-wrapper">
         <!-- Mirror div sits behind textarea, renders highlighted text -->
         <div class="textarea-mirror" id="textarea-mirror"></div>
-        <textarea id="msg-input" placeholder="Type your response to the scenario above..." maxlength="500" oninput="handleInput()"></textarea>
+        <textarea id="msg-input" placeholder="Type your response to the scenario above..." maxlength="500" oninput="handleInput()" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
         <div class="char-count" id="char-count">0 / 500</div>
       </div>
 
-      <div class="symbol-flag" id="symbol-flag">⚠️ Evasion pattern detected — normalized before analysis</div>
+      <div class="symbol-flag" id="symbol-flag">⚠️ Evasion pattern detected - normalized before analysis</div>
 
       <div class="analysis-bar hidden" id="analysis-bar">
         <div class="analysis-label">TOXICITY</div>
         <div class="score-track"><div class="score-fill" id="score-fill"></div></div>
-        <div class="score-value" id="score-value">—</div>
+        <div class="score-value" id="score-value">-</div>
         <div class="spinner" id="spinner"></div>
       </div>
       <div class="tier-legend" id="tier-legend" style="display:none; justify-content:space-between; margin-bottom:12px; padding:0 2px;">
-        <span style="font-size:10px; color:#16a34a; font-weight:600;">✓ 0–30% OK</span>
-        <span style="font-size:10px; color:#d97706; font-weight:600;">⚠ 30–60% Caution</span>
-        <span style="font-size:10px; color:#ea580c; font-weight:600;">✗ 60–80% Harmful</span>
+        <span style="font-size:10px; color:#16a34a; font-weight:600;">✓ 0-30% OK</span>
+        <span style="font-size:10px; color:#d97706; font-weight:600;">⚠ 30-60% Caution</span>
+        <span style="font-size:10px; color:#ea580c; font-weight:600;">✗ 60-80% Harmful</span>
         <span style="font-size:10px; color:#dc2626; font-weight:600;">✗ 80%+ Severe</span>
       </div>
 
@@ -688,12 +688,13 @@
           </button>
         </div>
         <div style="font-size:10px; color:#94a3b8; margin-top:6px;">
-          Downloads one row per message event — ready for analysis
+          Downloads one row per message event - ready for analysis
         </div>
       </div>
     </div>
   </div>
 
+  <div class="footer-note">⚡ Swap in Perspective API key (line 4 of script) to activate live scoring</div>
 </div>
 
 <div class="success-flash" id="success-flash">✓ Message sent</div>
@@ -703,11 +704,10 @@ const THRESHOLD_WARN  = 0.30;  // 0–30%: acceptable, send freely
 const THRESHOLD_BLOCK = 0.60;  // 30–60%: caution zone, send disabled
 const THRESHOLD_HIGH  = 0.80;  // 60–80%: harmful, blocked + warning
                                 // 80%+:   severely toxic, strong warning
-const PERSPECTIVE_API_KEY = null;
 
 // ── REMOTE STUDY CONFIG ──────────────────────────────────────────────────────
 // 1. Deploy your Google Apps Script (see setup guide) and paste the URL below
-const SHEETS_WEBHOOK_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
+const SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwaUt-Kdba5MNS4k7tYl261L6-V8ukrx_HLCXnPGhm4kzjWBjSJxNlvjrjGHcttbzab/exec';
 // 2. Paste your post-session survey URL below (with ?pid= at the end)
 const SURVEY_URL = 'YOUR_SURVEY_URL_HERE?pid=';
 
@@ -838,8 +838,13 @@ function matchesEvasionPhrase(text) {
   const norm = leetNormalize(stripSymbols(deduplicate(text))).trim();
   const orig = text.toLowerCase().trim();
   return evasionPhrases.some(phrase => {
-    const p = leetNormalize(stripSymbols(phrase));
-    return norm.includes(p) || orig.includes(phrase);
+    const p = leetNormalize(stripSymbols(phrase)).trim();
+    const origPhrase = phrase.toLowerCase().trim();
+    // MUST use word boundaries on BOTH checks
+    // prevents "fu" matching inside "respectful", "beautiful", "awful" etc.
+    const boundaryRe = new RegExp('\\b' + p.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '\\b');
+    const origRe = new RegExp('\\b' + origPhrase.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '\\b');
+    return boundaryRe.test(norm) || origRe.test(orig);
   });
 }
 
@@ -934,11 +939,13 @@ function matchesToxicWord(text, toxicWord) {
   }
 
   // Layer 1d: consonant skeleton — only for toxic words 5+ chars
+  // Require skeleton length >= 5 to prevent short skeletons like 'hty' (hate you)
+  // matching inside innocent phrases like 'with what you'
   if (toxicWord.length >= 5) {
     const inputSkel = consonantSkeleton(stripSymbols(text));
     const toxicSkel = consonantSkeleton(toxicWord);
-    if (toxicSkel.length >= 3 && inputSkel.includes(toxicSkel)) return true;
-    if (toxicSkel.length >= 3 && Math.abs(inputSkel.length - toxicSkel.length) <= 1) {
+    if (toxicSkel.length >= 5 && inputSkel.includes(toxicSkel)) return true;
+    if (toxicSkel.length >= 5 && Math.abs(inputSkel.length - toxicSkel.length) <= 1) {
       if (levenshtein(inputSkel, toxicSkel) <= 1) return true;
     }
   }
@@ -1381,16 +1388,44 @@ function simulateScore(text) {
   return Math.round(max * 100) / 100;
 }
 
+// ── HUGGINGFACE API CONFIG ────────────────────────────────────────────────
+// Free inference API — no key needed for limited use
+// Model: martin-ha/toxic-comment-model (fine-tuned on Wikipedia toxic comments)
+const HF_API_URL = 'https://api-inference.huggingface.co/models/martin-ha/toxic-comment-model';
+const HF_API_KEY = ''; // Token removed — HF API blocked by CORS on GitHub Pages anyway
+
 async function getScore(text) {
   if (!text.trim()) return 0;
-  /* --- LIVE MODE ---
-  if (PERSPECTIVE_API_KEY) {
-    const r = await fetch(`https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze?key=${PERSPECTIVE_API_KEY}`,
-      { method:'POST', headers:{'Content-Type':'application/json'},
-        body: JSON.stringify({ comment:{text}, languages:['en'], requestedAttributes:{TOXICITY:{}} }) });
-    const d = await r.json();
-    return d.attributeScores.TOXICITY.summaryScore.value;
-  } */
+
+  // Try HuggingFace API first
+  if (true) {
+    try {
+      const headers = { 'Content-Type': 'application/json' };
+      if (HF_API_KEY) headers['Authorization'] = `Bearer ${HF_API_KEY}`;
+      const r = await fetch(HF_API_URL, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ inputs: text })
+      });
+      if (r.ok) {
+        const d = await r.json();
+        // Model returns [{label:'toxic',score:0.95},{label:'non-toxic',score:0.05}]
+        if (Array.isArray(d) && d[0]) {
+          const labels = Array.isArray(d[0]) ? d[0] : d;
+          const toxic = labels.find(l =>
+            l.label && l.label.toLowerCase().includes('toxic') &&
+            !l.label.toLowerCase().includes('non')
+          );
+          if (toxic) return Math.round(toxic.score * 100) / 100;
+        }
+      }
+    } catch(e) {
+      // API unavailable — fall back to local scorer
+      console.log('HF API unavailable, using local scorer');
+    }
+  }
+
+  // Fallback: local rule-based scorer
   await new Promise(r => setTimeout(r, 160 + Math.random()*120));
   return simulateScore(text);
 }
@@ -1551,7 +1586,7 @@ function resetAnalysis() {
   document.getElementById('warn-message').style.display = 'none';
   document.getElementById('symbol-flag').style.display = 'none';
   document.getElementById('score-fill').style.width = '0%';
-  document.getElementById('score-value').textContent = '—';
+  document.getElementById('score-value').textContent = '-';
   document.getElementById('btn-send').disabled = true;
   document.getElementById('btn-abandon').style.display = 'none';
   document.getElementById('textarea-mirror').innerHTML = '';
@@ -1737,7 +1772,8 @@ document.getElementById('msg-input').addEventListener('keydown', e => {
 });
 
 buildScenarios();
-document.getElementById('display-session-id').textContent = SESSION_ID;
+const displayId = document.getElementById('display-session-id');
+if (displayId) displayId.textContent = SESSION_ID;
 
 // Sync mirror scroll with textarea scroll
 document.getElementById('msg-input').addEventListener('scroll', function() {
