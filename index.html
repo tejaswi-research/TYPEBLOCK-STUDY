@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TYPEBLOCK - Research Prototype</title>
+<title>TYPEBLOCK — Research Prototype</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -615,6 +615,7 @@
       <div class="logo-icon">TB</div>
       <div class="logo-text">TYPEBLOCK</div>
     </div>
+    <div class="logo-sub">Research Prototype v0.1 — Simulated Filter</div>
   </header>
 
   <div class="card">
@@ -637,18 +638,18 @@
         <div class="char-count" id="char-count">0 / 500</div>
       </div>
 
-      <div class="symbol-flag" id="symbol-flag">⚠️ Evasion pattern detected - normalized before analysis</div>
+      <div class="symbol-flag" id="symbol-flag">⚠️ Evasion pattern detected — normalized before analysis</div>
 
       <div class="analysis-bar hidden" id="analysis-bar">
         <div class="analysis-label">TOXICITY</div>
         <div class="score-track"><div class="score-fill" id="score-fill"></div></div>
-        <div class="score-value" id="score-value">-</div>
+        <div class="score-value" id="score-value">—</div>
         <div class="spinner" id="spinner"></div>
       </div>
       <div class="tier-legend" id="tier-legend" style="display:none; justify-content:space-between; margin-bottom:12px; padding:0 2px;">
-        <span style="font-size:10px; color:#16a34a; font-weight:600;">✓ 0-30% OK</span>
-        <span style="font-size:10px; color:#d97706; font-weight:600;">⚠ 30-60% Caution</span>
-        <span style="font-size:10px; color:#ea580c; font-weight:600;">✗ 60-80% Harmful</span>
+        <span style="font-size:10px; color:#16a34a; font-weight:600;">✓ 0–30% OK</span>
+        <span style="font-size:10px; color:#d97706; font-weight:600;">⚠ 30–60% Caution</span>
+        <span style="font-size:10px; color:#ea580c; font-weight:600;">✗ 60–80% Harmful</span>
         <span style="font-size:10px; color:#dc2626; font-weight:600;">✗ 80%+ Severe</span>
       </div>
 
@@ -672,7 +673,7 @@
       <div class="log-title">
         Session Log <span class="log-count" id="log-count">0</span>
       </div>
-      <div id="log-empty" class="log-empty">No messages yet - start typing above</div>
+      <div id="log-empty" class="log-empty">No messages yet — start typing above</div>
       <div class="log-list" id="log-list" style="display:none"></div>
       <div class="stats-row" id="stats-row" style="display:none">
         <div class="stat-box s-sent"><div class="stat-val" id="stat-sent">0</div><div class="stat-label">Sent</div></div>
@@ -688,7 +689,7 @@
           </button>
         </div>
         <div style="font-size:10px; color:#94a3b8; margin-top:6px;">
-          Downloads one row per message event - ready for analysis
+          Downloads one row per message event — ready for analysis
         </div>
       </div>
     </div>
@@ -707,7 +708,7 @@ const THRESHOLD_HIGH  = 0.80;  // 60–80%: harmful, blocked + warning
 
 // ── REMOTE STUDY CONFIG ──────────────────────────────────────────────────────
 // 1. Deploy your Google Apps Script (see setup guide) and paste the URL below
-const SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwaUt-Kdba5MNS4k7tYl261L6-V8ukrx_HLCXnPGhm4kzjWBjSJxNlvjrjGHcttbzab/exec';
+const SHEETS_WEBHOOK_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
 // 2. Paste your post-session survey URL below (with ?pid= at the end)
 const SURVEY_URL = 'YOUR_SURVEY_URL_HERE?pid=';
 
@@ -893,6 +894,8 @@ const whitelist = new Set([
   'knowing','knew','taking',
   // Specifically flagged innocent tokens from live testing
   'when','hear','hears','heard','weren','mine','more','stop','sure','us','shared',
+  'idea','ideas','escaped','escape','before','genius','baked','cooked','coked','fully',
+  'really','half','again','looks','looked','like','that','wow','try','trying','loks','realy',
   'cancel','plans','tolerate','intolerable','opinions','opinion','spreading','rumours',
   'cant','wont','dont','isnt','wasnt','couldnt','shouldnt','wouldnt','arent','didnt','hadnt',
   'false','record','straight','classmate','interrupting','discussions','credit','third',
@@ -971,6 +974,11 @@ function matchesToxicWord(text, toxicWord) {
     const rawLenDiff = Math.abs(bare.length - toxicWord.length);
     if (rawLenDiff > 2) continue;
     if (bare.length < toxicWord.length - 1) continue; // too short to be a match
+
+    // First letter guard — token and toxic word must start with the same letter
+    // Prevents completely unrelated words matching after phonetic collapse:
+    // 'escaped'(e) vs 'stupid'(s), 'before'(b) vs 'failure'(f), 'genius'(g) vs 'jackass'(j)
+    if (bare.length > 0 && toxicWord.length > 0 && bare[0] !== toxicWord[0]) continue;
 
     // Phonetic collapsed length guard
     const phonLenDiff = Math.abs(phoneticToken.length - phoneticToxic.length);
@@ -1443,14 +1451,14 @@ function buildScenarios() {
     nav.appendChild(b);
   });
   document.getElementById('scenario-text').textContent = scenarios[0].text;
-  document.getElementById('scenario-counter').textContent = `Scenario 1 of ${scenarios.length} - ${scenarios[0].type}`;
+  document.getElementById('scenario-counter').textContent = `Scenario 1 of ${scenarios.length} — ${scenarios[0].type}`;
   scenarioTracking[0].startTime = Date.now();
 }
 
 function selectScenario(i) {
   currentScenario = i;
   document.getElementById('scenario-text').textContent = scenarios[i].text;
-  document.getElementById('scenario-counter').textContent = `Scenario ${i+1} of ${scenarios.length} - ${scenarios[i].type}`;
+  document.getElementById('scenario-counter').textContent = `Scenario ${i+1} of ${scenarios.length} — ${scenarios[i].type}`;
   document.querySelectorAll('.scenario-btn').forEach((b, j) => {
     b.classList.toggle('active', j === i);
   });
@@ -1586,7 +1594,7 @@ function resetAnalysis() {
   document.getElementById('warn-message').style.display = 'none';
   document.getElementById('symbol-flag').style.display = 'none';
   document.getElementById('score-fill').style.width = '0%';
-  document.getElementById('score-value').textContent = '-';
+  document.getElementById('score-value').textContent = '—';
   document.getElementById('btn-send').disabled = true;
   document.getElementById('btn-abandon').style.display = 'none';
   document.getElementById('textarea-mirror').innerHTML = '';
@@ -1734,7 +1742,7 @@ function goToSurvey() {
   const target = SURVEY_URL !== 'YOUR_SURVEY_URL_HERE?pid='
     ? SURVEY_URL + encodeURIComponent(urlPid) : null;
   if (target) { window.location.href = target; }
-  else { alert('Survey URL not configured - please notify the researcher.'); }
+  else { alert('Survey URL not configured — please notify the researcher.'); }
 }
 
 function renderLog() {
@@ -1787,7 +1795,7 @@ document.getElementById('msg-input').addEventListener('scroll', function() {
     <div style="font-size:40px; margin-bottom:16px;">✅</div>
     <div style="font-size:11px; font-weight:600; letter-spacing:0.8px; color:#1a56db; text-transform:uppercase; margin-bottom:10px;">Session Complete</div>
     <div style="font-size:19px; font-weight:600; color:#0f172a; margin-bottom:10px;">All scenarios done!</div>
-    <div style="font-size:13.5px; color:#64748b; margin-bottom:28px; line-height:1.6;">Thank you for completing all 4 scenarios. Your responses have been recorded. Please click below to proceed to the short survey - it takes about 5 minutes.</div>
+    <div style="font-size:13.5px; color:#64748b; margin-bottom:28px; line-height:1.6;">Thank you for completing all 4 scenarios. Your responses have been recorded. Please click below to proceed to the short survey — it takes about 5 minutes.</div>
     <button onclick="goToSurvey()" style="width:100%; padding:13px; background:#1a56db; color:white; border:none; border-radius:8px; font-family:'Inter',sans-serif; font-size:14px; font-weight:600; cursor:pointer; margin-bottom:10px; box-shadow:0 2px 8px rgba(26,86,219,0.25);">
       Continue to Survey →
     </button>
