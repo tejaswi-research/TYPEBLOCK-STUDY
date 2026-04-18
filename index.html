@@ -722,7 +722,7 @@ const ENV_PROFILES = {
     thresholdHigh:  0.80,
     nudgeAmber:  'This message has a strong tone for a public post. You can rephrase or send as-is.',
     nudgeOrange: 'This message may be harmful in a public context. Please rephrase before sending.',
-    nudgeRed:    'This message is harmful and cannot be sent. Please rephrase completely before sending.',
+    nudgeRed:    'This content contains language that violates community safety guidelines. Please rephrase completely.',
   },
   professional: {
     label: 'Professional / Email',
@@ -731,7 +731,7 @@ const ENV_PROFILES = {
     thresholdHigh:  0.65,
     nudgeAmber:  'This message may not be appropriate in a professional context. Consider rephrasing.',
     nudgeOrange: 'This message is likely inappropriate for a professional environment. Please rephrase.',
-    nudgeRed:    'This message is not suitable for professional communication and cannot be sent.',
+    nudgeRed:    'This language is not appropriate for professional communication. Please rephrase completely.',
   },
   private: {
     label: 'Private Message',
@@ -740,7 +740,7 @@ const ENV_PROFILES = {
     thresholdHigh:  0.88,
     nudgeAmber:  'This message has a strong tone. You can rephrase or send as-is.',
     nudgeOrange: 'This message may be hurtful even in a private conversation. Please rephrase.',
-    nudgeRed:    'This message is harmful and cannot be sent. Please rephrase completely.',
+    nudgeRed:    'Even in a private conversation, this message may cause harm. Please rephrase completely.',
   },
 };
 
@@ -1374,15 +1374,19 @@ const tier1 = [
 // Tier 2 — dismissive, degrading, hostile (score 0.52–0.67)
 const tier2 = [
   'terrible','useless','failure',
-  'embarrassing','ridiculous','stupid','lame','jerk','creep','hate',
+  'stupid','lame','jerk','creep','hate',
   // Dismissive terms — "you little brat", "you little pest" etc.
   'brat','pest','nuisance','scum','spineless','pathetic little',
   'grow up','get lost','back off','leave me alone','mind your business',
   'none of your business','not your place','who do you think',
 ];
 
-// Tier 3 — frustrated or upset tone (score 0.18–0.33)
-const tier3 = ['frustrated','angry','upset','disappointed','unfair','wrong','annoying','lazy','awful','horrible','worst','liar','fake','coward'];
+// Tier 3 — frustrated, assertive, or mildly negative tone (score 0.18–0.33)
+// Send enabled with amber caution only — these are common in everyday conflict
+const tier3 = ['frustrated','angry','upset','disappointed','unfair','wrong',
+  'annoying','lazy','awful','horrible','worst','liar','fake','coward',
+  'embarrassing','ridiculous'  // situation-directed as often as person-directed
+];
 
 // ── COMPOUND PHRASE SCORER ────────────────────────────────────────────────
 // Catches multi-word abuse patterns that individual word matching misses:
