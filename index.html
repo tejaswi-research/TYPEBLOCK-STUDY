@@ -701,10 +701,48 @@
 <div class="success-flash" id="success-flash">✓ Message sent</div>
 
 <script>
-const THRESHOLD_WARN  = 0.30;  // 0–30%: acceptable, send freely
-const THRESHOLD_BLOCK = 0.60;  // 30–60%: caution zone, send disabled
-const THRESHOLD_HIGH  = 0.80;  // 60–80%: harmful, blocked + warning
-                                // 80%+:   severely toxic, strong warning
+const THRESHOLD_WARN  = 0.30;  // amber caution zone start
+const THRESHOLD_BLOCK = 0.60;  // default block threshold
+const THRESHOLD_HIGH  = 0.80;  // severe tier start
+
+// ── ENVIRONMENT-AWARE THRESHOLD PROFILES ─────────────────────────────────
+// Environment is set via URL parameter: ?env=social|professional|private
+// Each environment has different thresholds and nudge messaging
+// reflecting real-world communication norms.
+//
+// social:       Public posts, comments, replies to strangers — high stakes
+// professional: Workplace email, Slack, formal channels — even mild tone matters
+// private:      DMs to close friends/family — higher tolerance, personal context
+//
+const ENV_PROFILES = {
+  social: {
+    label: 'Social Media',
+    thresholdWarn:  0.30,
+    thresholdBlock: 0.60,
+    thresholdHigh:  0.80,
+    nudgeAmber:  'This message has a strong tone for a public post. You can rephrase or send as-is.',
+    nudgeOrange: 'This message may be harmful in a public context. Please rephrase before sending.',
+    nudgeRed:    'This message is harmful and cannot be sent. Please rephrase completely before sending.',
+  },
+  professional: {
+    label: 'Professional / Email',
+    thresholdWarn:  0.20,  // lower — even mild language flagged in professional context
+    thresholdBlock: 0.40,
+    thresholdHigh:  0.65,
+    nudgeAmber:  'This message may not be appropriate in a professional context. Consider rephrasing.',
+    nudgeOrange: 'This message is likely inappropriate for a professional environment. Please rephrase.',
+    nudgeRed:    'This message is not suitable for professional communication and cannot be sent.',
+  },
+  private: {
+    label: 'Private Message',
+    thresholdWarn:  0.45,  // higher — more tolerance in private between friends
+    thresholdBlock: 0.75,
+    thresholdHigh:  0.88,
+    nudgeAmber:  'This message has a strong tone. You can rephrase or send as-is.',
+    nudgeOrange: 'This message may be hurtful even in a private conversation. Please rephrase.',
+    nudgeRed:    'This message is harmful and cannot be sent. Please rephrase completely.',
+  },
+};
 
 // ── REMOTE STUDY CONFIG ──────────────────────────────────────────────────────
 // 1. Deploy your Google Apps Script (see setup guide) and paste the URL below
@@ -712,18 +750,30 @@ const SHEETS_WEBHOOK_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
 // 2. Paste your post-session survey URL below (with ?pid= at the end)
 const SURVEY_URL = 'YOUR_SURVEY_URL_HERE?pid=';
 
-// ── READ CONDITION & PARTICIPANT ID FROM URL ─────────────────────────────────
+// ── READ CONDITION, PARTICIPANT ID & ENVIRONMENT FROM URL ────────────────────
 // Share links:
-//   ?condition=control&pid=P01
-//   ?condition=experimental&pid=P01
-const urlParams = new URLSearchParams(window.location.search);
-const urlCondition = urlParams.get('condition') || 'typeblock';
+//   ?condition=control&pid=P001&env=social
+//   ?condition=experimental&pid=P051&env=professional
+//   ?condition=experimental&pid=P076&env=private
+const urlParams   = new URLSearchParams(window.location.search);
+const urlCondition = urlParams.get('condition') || 'experimental';
 const urlPid       = urlParams.get('pid') || 'UNKNOWN';
-// Normalise: 'experimental' → 'typeblock' (internal name), 'control' → 'control'
+const urlEnv       = urlParams.get('env') || 'social'; // default to social
+
+// Load environment profile — fallback to social if invalid env param
+const envProfile = ENV_PROFILES[urlEnv] || ENV_PROFILES.social;
+
+// Override thresholds from environment profile
+const ENV_THRESHOLD_WARN  = envProfile.thresholdWarn;
+const ENV_THRESHOLD_BLOCK = envProfile.thresholdBlock;
+const ENV_THRESHOLD_HIGH  = envProfile.thresholdHigh;
+
+// Normalise condition
 let mode = urlCondition === 'control' ? 'control' : 'typeblock';
 
-// Show a neutral badge — never reveals condition name to participant
-document.getElementById('condition-badge').textContent = 'SESSION ACTIVE';
+// Show environment label in badge so participant knows their context
+document.getElementById('condition-badge').textContent =
+  mode === 'control' ? 'SESSION ACTIVE' : `SESSION ACTIVE — ${envProfile.label}`;
 
 const scenarios = [
   { type: 'Provocation',  text: "Someone just posted a negative comment about your work online, calling it 'lazy and poorly done.' How do you respond to them publicly?" },
@@ -744,7 +794,7 @@ const scenarioTracking = scenarios.map(() => ({
 let currentScenario = 0, analysisTimer = null;
 const SESSION_ID = Date.now().toString(36).toUpperCase();
 let lastScore = 0, isFlagged = false;
-let stats = { sent: 0, blocked: 0, abandoned: 0 };
+let stats = { sent: 0, blocked: 0, abandoned: 0, implicit_abandon: 0 };
 let logItems = [];
 
 // ── NORMALIZATION ENGINE (4-layer) ────────────────────────────────────────
@@ -895,6 +945,7 @@ const whitelist = new Set([
   // Specifically flagged innocent tokens from live testing
   'when','hear','hears','heard','weren','mine','more','stop','sure','us','shared',
   'idea','ideas','escaped','escape','before','genius','baked','cooked','coked','fully',
+  'assessment','asesment','assessments','assign','assume','assist','association',
   'really','half','again','looks','looked','like','that','wow','try','trying','loks','realy',
   'cancel','plans','tolerate','intolerable','opinions','opinion','spreading','rumours',
   'cant','wont','dont','isnt','wasnt','couldnt','shouldnt','wouldnt','arent','didnt','hadnt',
@@ -1322,16 +1373,16 @@ const tier1 = [
 
 // Tier 2 — dismissive, degrading, hostile (score 0.52–0.67)
 const tier2 = [
-  'annoying','lazy','awful','terrible','horrible','worst','useless','failure',
-  'embarrassing','ridiculous','stupid','lame','jerk','fake','liar','creep','hate',
+  'terrible','useless','failure',
+  'embarrassing','ridiculous','stupid','lame','jerk','creep','hate',
   // Dismissive terms — "you little brat", "you little pest" etc.
-  'brat','pest','nuisance','scum','coward','spineless','pathetic little',
+  'brat','pest','nuisance','scum','spineless','pathetic little',
   'grow up','get lost','back off','leave me alone','mind your business',
   'none of your business','not your place','who do you think',
 ];
 
 // Tier 3 — frustrated or upset tone (score 0.18–0.33)
-const tier3 = ['frustrated','angry','upset','disappointed','unfair','wrong'];
+const tier3 = ['frustrated','angry','upset','disappointed','unfair','wrong','annoying','lazy','awful','horrible','worst','liar','fake','coward'];
 
 // ── COMPOUND PHRASE SCORER ────────────────────────────────────────────────
 // Catches multi-word abuse patterns that individual word matching misses:
@@ -1353,33 +1404,82 @@ function compoundPhraseScore(text) {
   return 0;
 }
 
+// ── SELF-DIRECTED DETECTION ───────────────────────────────────────────────
+// Detects whether toxic language is directed at the writer themselves
+// vs directed at another person. "I'm so stupid" should score much lower
+// than "you're so stupid". Self-directed language is not cyberbullying.
+function isSelfDirected(text) {
+  const lower = text.toLowerCase();
+  // Must contain first-person self-reference
+  const hasSelfRef = /\b(i am|i'm|im|i feel|i think|i know|i was|i've|ive|myself|my own)\b/.test(lower);
+  if (!hasSelfRef) return false;
+  // Must NOT contain second-person targeting in same sentence
+  const hasOtherTarget = /\b(you|ur|u\b|he|she|they|him|her|them|his|her)\b/.test(lower);
+  if (hasOtherTarget) return false;
+  return true;
+}
+
+// Detects whether toxic language is directed at another person
+// "you are such an idiot" YES / "I am such an idiot" NO
+function isOtherDirected(text) {
+  const lower = text.toLowerCase();
+  return /\b(you|ur|u\b|he|she|they|him|her|them)\b/.test(lower);
+}
+
 function simulateScore(text) {
   // Stage 0a: Run phonetic substitute detection first
   const { text: phoneticNorm, substitutionFound } = phoneticSubstitute(text);
   const textToScore = phoneticNorm;
 
+  // ── Self/Other direction detection ───────────────────────────────────────
+  // Self-directed toxic language ("I'm such an idiot") is not cyberbullying
+  // Reduce tier scores significantly when language is self-directed
+  const selfDirected = isSelfDirected(text);
+  const otherDirected = isOtherDirected(text);
+  // If clearly self-directed and NOT targeting anyone else — apply reduction
+  const applySelfReduction = selfDirected && !otherDirected;
+
   let max = 0;
 
   // Word-level matching (all tiers)
-  tier1.forEach(w => { if (matchesToxicWord(textToScore, w)) max = Math.max(max, 0.82 + Math.random()*0.15); });
-  tier2.forEach(w => { if (matchesToxicWord(textToScore, w)) max = Math.max(max, 0.52 + Math.random()*0.15); });
+  // Self-directed: tier1 drops to tier2 range, tier2 drops to tier3 range
+  tier1.forEach(w => {
+    if (matchesToxicWord(textToScore, w)) {
+      const score = applySelfReduction
+        ? 0.30 + Math.random()*0.10  // self-directed: amber only
+        : 0.82 + Math.random()*0.15; // other-directed: full tier1
+      max = Math.max(max, score);
+    }
+  });
+  tier2.forEach(w => {
+    if (matchesToxicWord(textToScore, w)) {
+      const score = applySelfReduction
+        ? 0.15 + Math.random()*0.10  // self-directed: near zero
+        : 0.52 + Math.random()*0.15; // other-directed: full tier2
+      max = Math.max(max, score);
+    }
+  });
   tier3.forEach(w => { if (matchesToxicWord(textToScore, w)) max = Math.max(max, 0.18 + Math.random()*0.15); });
 
-  // Evasion phrases
+  // Evasion phrases — obfuscation is always intentional regardless of direction
   if (matchesEvasionPhrase(textToScore)) max = Math.max(max, 0.78 + Math.random()*0.15);
 
   // Compound phrase matching — "you little brat", "piece of rat ass", etc.
+  // These are inherently other-directed so no self-reduction applied
   const compoundScore = compoundPhraseScore(textToScore);
   if (compoundScore > 0) max = Math.max(max, compoundScore + Math.random()*0.05);
 
   // Stage 0b: Sentence-level context scoring — runs on ORIGINAL text
-  const { boost: contextBoost, signals } = sentenceContextScore(text);
-  max = Math.min(1, max + contextBoost);
+  // Skip context boost for self-directed language
+  if (!applySelfReduction) {
+    const { boost: contextBoost, signals } = sentenceContextScore(text);
+    max = Math.min(1, max + contextBoost);
+  }
 
   // If phonetic substitution was found but no word match yet,
   // ensure minimum score reflects evasion intent
-  if (substitutionFound && max < THRESHOLD_BLOCK) {
-    max = Math.max(max, THRESHOLD_BLOCK + Math.random() * 0.15);
+  if (substitutionFound && max < ENV_THRESHOLD_BLOCK) {
+    max = Math.max(max, ENV_THRESHOLD_BLOCK + Math.random() * 0.15);
   }
 
   // Classic tone boosters
@@ -1504,11 +1604,11 @@ async function runAnalysis(text) {
   // 60–80%: orange — harmful, blocked + warning
   // 80%+:   red    — severely toxic, strong warning
   let barColor, valColor;
-  if (score < THRESHOLD_WARN) {
+  if (score < ENV_THRESHOLD_WARN) {
     barColor = '#16a34a'; valColor = '#16a34a';       // green
-  } else if (score < THRESHOLD_BLOCK) {
+  } else if (score < ENV_THRESHOLD_BLOCK) {
     barColor = '#d97706'; valColor = '#d97706';       // amber
-  } else if (score < THRESHOLD_HIGH) {
+  } else if (score < ENV_THRESHOLD_HIGH) {
     barColor = '#ea580c'; valColor = '#ea580c';       // orange
   } else {
     barColor = '#dc2626'; valColor = '#dc2626';       // red
@@ -1531,18 +1631,18 @@ async function runAnalysis(text) {
   }
 
   // ── TYPEBLOCK mode — apply tiers ─────────────────────────────────────
-  if (score < THRESHOLD_WARN) {
+  if (score < ENV_THRESHOLD_WARN) {
     // TIER 1: 0–30% — green, send freely
     isFlagged = false;
     document.getElementById('msg-input').classList.remove('flagged');
     document.getElementById('warn-message').style.display = 'none';
     document.getElementById('btn-send').disabled = !txt;
 
-  } else if (score < THRESHOLD_BLOCK) {
-    // TIER 2: 30–60% — amber caution border, send stays ENABLED
+  } else if (score < ENV_THRESHOLD_BLOCK) {
+    // TIER 2: amber caution border, send stays ENABLED
     isFlagged = false;
     document.getElementById('msg-input').style.borderColor = '#d97706';
-    document.getElementById('msg-input').style.background  = ''; // keep transparent
+    document.getElementById('msg-input').style.background  = '';
     document.getElementById('msg-input').style.boxShadow  = '0 0 0 3px rgba(217,119,6,0.08)';
     document.getElementById('msg-input').classList.remove('flagged');
     document.getElementById('warn-message').style.display  = 'flex';
@@ -1551,11 +1651,11 @@ async function runAnalysis(text) {
     document.getElementById('warn-icon').textContent  = '⚠️';
     document.getElementById('warn-title').textContent = 'This message has a cautionary tone.';
     document.getElementById('warn-title').style.color = '#d97706';
-    document.getElementById('warn-body').textContent  = 'Some words may come across harshly. You can rephrase or send as-is.';
+    document.getElementById('warn-body').textContent  = envProfile.nudgeAmber;
     document.getElementById('btn-send').disabled = !txt;
 
-  } else if (score < THRESHOLD_HIGH) {
-    // TIER 3: 60–80% — orange, harmful
+  } else if (score < ENV_THRESHOLD_HIGH) {
+    // TIER 3: orange, harmful — send blocked
     isFlagged = true;
     document.getElementById('msg-input').classList.add('flagged');
     document.getElementById('msg-input').style.borderColor = '';
@@ -1567,7 +1667,7 @@ async function runAnalysis(text) {
     document.getElementById('warn-icon').textContent  = '🚫';
     document.getElementById('warn-title').textContent = 'This message may be harmful.';
     document.getElementById('warn-title').style.color = '#ea580c';
-    document.getElementById('warn-body').textContent  = 'Please rephrase before sending. The send button will re-enable once the content passes the safety threshold.';
+    document.getElementById('warn-body').textContent  = envProfile.nudgeOrange;
     document.getElementById('btn-send').disabled = true;
 
   } else {
@@ -1583,7 +1683,7 @@ async function runAnalysis(text) {
     document.getElementById('warn-icon').textContent  = '🚫';
     document.getElementById('warn-title').textContent = 'This message is harmful and cannot be sent.';
     document.getElementById('warn-title').style.color = '#dc2626';
-    document.getElementById('warn-body').textContent  = 'This content contains language that violates community safety guidelines. Please rephrase completely before sending.';
+    document.getElementById('warn-body').textContent  = envProfile.nudgeRed;
     document.getElementById('btn-send').disabled = true;
   }
 }
@@ -1607,6 +1707,12 @@ function resetAnalysis() {
 }
 
 function clearMsg() {
+  const text = document.getElementById('msg-input').value.trim();
+  // If message was blocked and user clears instead of clicking Abandon,
+  // log as implicit_abandon so we capture all harm prevention events
+  if (text && lastScore >= ENV_THRESHOLD_BLOCK && condition === 'experimental') {
+    addLog(text, lastScore, 'implicit_abandon');
+  }
   document.getElementById('msg-input').value = '';
   document.getElementById('char-count').textContent = '0 / 500';
   clearTimeout(analysisTimer);
@@ -1637,7 +1743,7 @@ function addLog(text, score, status) {
   const track = scenarioTracking[currentScenario];
   if (track.firstDraftScore === null) track.firstDraftScore = score;
   const timeSpent = track.startTime ? Math.round((Date.now() - track.startTime) / 1000) : 0;
-  if (status === 'sent' || status === 'abandoned') {
+  if (status === 'sent' || status === 'abandoned' || status === 'implicit_abandon') {
     track.completed = true;
     const btn = document.getElementById(`scenario-btn-${currentScenario}`);
     if (btn) btn.classList.add('done');
@@ -1672,6 +1778,7 @@ async function submitEventToSheets(item) {
   const payload = {
     participant_id:       urlPid,
     condition:            urlCondition,
+    environment:          urlEnv,
     scenario_index:       item.scenario + 1,
     scenario_type:        item.scenarioType,
     event_status:         item.status,
