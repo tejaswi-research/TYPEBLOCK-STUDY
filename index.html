@@ -216,7 +216,7 @@
     background: transparent;
   }
 
-  /* Highlight marks inside mirror - visible through transparent textarea */
+  /* Highlight marks inside mirror — visible through transparent textarea */
   .highlight-tier1 {
     background: rgba(220,38,38,0.20);
     border-bottom: 2.5px solid #dc2626;
@@ -249,7 +249,7 @@
   textarea {
     position: relative;
     z-index: 2;
-    background: transparent !important; /* MUST stay transparent - highlights show through */
+    background: transparent !important; /* MUST stay transparent — highlights show through */
     width: 100%;
     min-height: 108px;
     border: 1.5px solid var(--border-strong);
@@ -271,7 +271,7 @@
 
   textarea.flagged {
     border-color: var(--warn) !important;
-    /* No background override - keep transparent so highlights show */
+    /* No background override — keep transparent so highlights show */
     box-shadow: 0 0 0 3px rgba(220,38,38,0.06) !important;
   }
 
@@ -637,12 +637,12 @@
         <div class="char-count" id="char-count">0 / 500</div>
       </div>
 
-      <div class="symbol-flag" id="symbol-flag">⚠️ Evasion pattern detected - normalized before analysis</div>
+      <div class="symbol-flag" id="symbol-flag">⚠️ Evasion pattern detected — normalized before analysis</div>
 
       <div class="analysis-bar hidden" id="analysis-bar">
         <div class="analysis-label">TOXICITY</div>
         <div class="score-track"><div class="score-fill" id="score-fill"></div></div>
-        <div class="score-value" id="score-value">-</div>
+        <div class="score-value" id="score-value">—</div>
         <div class="spinner" id="spinner"></div>
       </div>
       <div class="tier-legend" id="tier-legend" style="display:none; justify-content:space-between; margin-bottom:12px; padding:0 2px;">
@@ -672,7 +672,7 @@
       <div class="log-title">
         Session Log <span class="log-count" id="log-count">0</span>
       </div>
-      <div id="log-empty" class="log-empty">No messages yet - start typing above</div>
+      <div id="log-empty" class="log-empty">No messages yet — start typing above</div>
       <div class="log-list" id="log-list" style="display:none"></div>
       <div class="stats-row" id="stats-row" style="display:none">
         <div class="stat-box s-sent"><div class="stat-val" id="stat-sent">0</div><div class="stat-label">Sent</div></div>
@@ -688,7 +688,7 @@
           </button>
         </div>
         <div style="font-size:10px; color:#94a3b8; margin-top:6px;">
-          Downloads one row per message event - ready for analysis
+          Downloads one row per message event — ready for analysis
         </div>
       </div>
     </div>
@@ -708,9 +708,9 @@ const THRESHOLD_HIGH  = 0.80;  // severe tier start
 // Each environment has different thresholds and nudge messaging
 // reflecting real-world communication norms.
 //
-// social:       Public posts, comments, replies to strangers - high stakes
-// professional: Workplace email, Slack, formal channels - even mild tone matters
-// private:      DMs to close friends/family - higher tolerance, personal context
+// social:       Public posts, comments, replies to strangers — high stakes
+// professional: Workplace email, Slack, formal channels — even mild tone matters
+// private:      DMs to close friends/family — higher tolerance, personal context
 //
 const ENV_PROFILES = {
   social: {
@@ -724,7 +724,7 @@ const ENV_PROFILES = {
   },
   professional: {
     label: 'Professional / Email',
-    thresholdWarn:  0.20,  // lower - even mild language flagged in professional context
+    thresholdWarn:  0.20,  // lower — even mild language flagged in professional context
     thresholdBlock: 0.40,
     thresholdHigh:  0.65,
     nudgeAmber:  'This message may not be appropriate in a professional context. Consider rephrasing.',
@@ -733,7 +733,7 @@ const ENV_PROFILES = {
   },
   private: {
     label: 'Private Message',
-    thresholdWarn:  0.45,  // higher - more tolerance in private between friends
+    thresholdWarn:  0.45,  // higher — more tolerance in private between friends
     thresholdBlock: 0.75,
     thresholdHigh:  0.88,
     nudgeAmber:  'This message has a strong tone. You can rephrase or send as-is.',
@@ -744,7 +744,7 @@ const ENV_PROFILES = {
 
 // ── REMOTE STUDY CONFIG ──────────────────────────────────────────────────────
 // 1. Deploy your Google Apps Script (see setup guide) and paste the URL below
-const SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwaUt-Kdba5MNS4k7tYl261L6-V8ukrx_HLCXnPGhm4kzjWBjSJxNlvjrjGHcttbzab/exec';
+const SHEETS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbzsW306H9Vn7byn7_nbt8Phdb45enhBSDuj-8MFYZoA_gwnwTdfeoQkUN7aRQHfCsUpzA/exec";
 // 2. Paste your post-session survey URL below (with ?pid= at the end)
 const SURVEY_URL = 'https://docs.google.com/forms/d/e/1FAIpQLScLAHEYmDA7I8xFELADtixzuStJzPEEfp1EZxa7xea-BFTsOg/viewform?usp=preview';
 
@@ -758,7 +758,7 @@ const urlCondition = urlParams.get('condition') || 'experimental';
 const urlPid       = urlParams.get('pid') || 'UNKNOWN';
 const urlEnv       = urlParams.get('env') || 'social'; // default to social
 
-// Load environment profile - fallback to social if invalid env param
+// Load environment profile — fallback to social if invalid env param
 const envProfile = ENV_PROFILES[urlEnv] || ENV_PROFILES.social;
 
 // Override thresholds from environment profile
@@ -771,7 +771,7 @@ let mode = urlCondition === 'control' ? 'control' : 'typeblock';
 
 // Show environment label in badge so participant knows their context
 document.getElementById('condition-badge').textContent =
-  mode === 'control' ? 'SESSION ACTIVE' : `SESSION ACTIVE - ${envProfile.label}`;
+  mode === 'control' ? 'SESSION ACTIVE' : `SESSION ACTIVE — ${envProfile.label}`;
 
 const scenarios = [
   { type: 'Provocation',  text: "Someone just posted a negative comment about your work online, calling it 'lazy and poorly done.' How do you respond to them publicly?" },
@@ -805,7 +805,7 @@ function leetNormalize(t) {
   return n;
 }
 
-// Core deduplication - MUST happen before fuzzy matching
+// Core deduplication — MUST happen before fuzzy matching
 // Biiitchhhh → bitch, Diiick → dick, shiiit → shit
 function deduplicate(t) {
   return t.toLowerCase()
@@ -822,7 +822,7 @@ function consonantSkeleton(t) {
   return t.toLowerCase().replace(/[aeiou]/g, '').replace(/[^a-z]/g, '');
 }
 
-// LAYER 2: Wildcard regex - * and symbols between letters
+// LAYER 2: Wildcard regex — * and symbols between letters
 // FIX: now treats each * as matching exactly one letter (not zero)
 // so B***ch matches b-i-t-c-h (3 wildcards = 3 letters: i,t,c)
 function wordToWildcardRegex(word) {
@@ -833,7 +833,7 @@ function wordToWildcardRegex(word) {
 }
 
 // Also try matching after stripping all symbols from input, then compare consonant skeletons
-// b***ch → bch - check if toxic word's consonant skeleton starts/ends the same
+// b***ch → bch — check if toxic word's consonant skeleton starts/ends the same
 function consonantSkeleton(t) {
   return t.toLowerCase().replace(/[aeiou]/g, '').replace(/[^a-z]/g, '');
 }
@@ -848,7 +848,7 @@ function phoneticNormalize(t) {
     .replace(/[^a-z]/g, '');
 }
 
-// LAYER 4: Levenshtein fuzzy distance - tighter tolerances to kill false positives
+// LAYER 4: Levenshtein fuzzy distance — tighter tolerances to kill false positives
 function levenshtein(a, b) {
   const m = a.length, n = b.length;
   const dp = Array.from({length: m+1}, (_,i) => Array.from({length: n+1}, (_,j) => j===0?i:0));
@@ -862,7 +862,7 @@ function levenshtein(a, b) {
 function fuzzyMatchesWord(inputToken, toxicWord) {
   const lenDiff = Math.abs(inputToken.length - toxicWord.length);
   if (lenDiff > 2) return false;
-  // ≤3 chars: exact match only - prevents "di"→"die", "who"→"whore" etc
+  // ≤3 chars: exact match only — prevents "di"→"die", "who"→"whore" etc
   if (toxicWord.length <= 3) return inputToken === toxicWord;
   // 4 chars: exact only after normalization
   if (toxicWord.length === 4) return inputToken === toxicWord;
@@ -876,7 +876,7 @@ function hasObfuscation(t) {
   return /[a-zA-Z][!@#\$\*\.\-\_\^]{1,3}[a-zA-Z]/.test(t);
 }
 
-// Evasion phrases - normalized before matching so "f@ off" → "fa off" → matches "f off"
+// Evasion phrases — normalized before matching so "f@ off" → "fa off" → matches "f off"
 const evasionPhrases = [
   'f off','f u','fu','eff off','eff you','foff','fa off',
   'b word','the b word','a-hole','ahole','s-word','f-word','c-word',
@@ -897,12 +897,12 @@ function matchesEvasionPhrase(text) {
   });
 }
 
-// Whitelist - words that must NEVER trigger toxic detection
+// Whitelist — words that must NEVER trigger toxic detection
 // Expanded to cover common innocent words that phonetically collapse
 // into near-matches of toxic words (e.g. "ideas"→"adas" ≈ "idiot"→"adat",
 // "business"→"basanas" ≈ "useless"→"asalas")
 const whitelist = new Set([
-  // Very short tokens - always innocent
+  // Very short tokens — always innocent
   'who','di','hi','do','go','no','ok','la','ma','pa','ba','da','fi','lo','mo','ho','bi',
   // 2–3 letter function words
   'as','if','of','me','my','by','at','be','he','we','it','is','an','am','or','so','up',
@@ -956,16 +956,16 @@ const whitelist = new Set([
   'ever','even','each','done','come','both','been','back','also',
 ]);
 
-// Master match - all layers with whitelist guard
+// Master match — all layers with whitelist guard
 function matchesToxicWord(text, toxicWord) {
   const deduped = deduplicate(text);
   const dedupedToxic = deduplicate(toxicWord);
   const tokens = deduped.toLowerCase().split(/\s+/);
 
-  // Single whitelisted word - skip entirely
+  // Single whitelisted word — skip entirely
   if (tokens.length === 1 && whitelist.has(tokens[0].replace(/[^a-z]/g,''))) return false;
 
-  // Layer 1a: leet - word boundaries for short toxic words to prevent
+  // Layer 1a: leet — word boundaries for short toxic words to prevent
   // "ass" matching inside "class","pass","lass" etc.
   // IMPORTANT: run on ORIGINAL text (not deduped) for short words,
   // because dedup collapses "ass" → "as" which breaks boundary matching.
@@ -981,7 +981,7 @@ function matchesToxicWord(text, toxicWord) {
     if (leetOrig.includes(leetToxOrig)) return true;
   }
 
-  // Layer 1c: symbol-stripped - word boundary for short words
+  // Layer 1c: symbol-stripped — word boundary for short words
   const stripped = stripSymbols(deduped);
   const toxicStripped = stripSymbols(toxicWord);
   if (toxicStripped.length <= 4) {
@@ -990,7 +990,7 @@ function matchesToxicWord(text, toxicWord) {
     if (stripped.includes(toxicStripped)) return true;
   }
 
-  // Layer 1d: consonant skeleton - only for toxic words 5+ chars
+  // Layer 1d: consonant skeleton — only for toxic words 5+ chars
   // Require skeleton length >= 5 to prevent short skeletons like 'hty' (hate you)
   // matching inside innocent phrases like 'with what you'
   if (toxicWord.length >= 5) {
@@ -1024,7 +1024,7 @@ function matchesToxicWord(text, toxicWord) {
     if (rawLenDiff > 2) continue;
     if (bare.length < toxicWord.length - 1) continue; // too short to be a match
 
-    // First letter guard - token and toxic word must start with the same letter
+    // First letter guard — token and toxic word must start with the same letter
     // Prevents completely unrelated words matching after phonetic collapse:
     // 'escaped'(e) vs 'stupid'(s), 'before'(b) vs 'failure'(f), 'genius'(g) vs 'jackass'(j)
     if (bare.length > 0 && toxicWord.length > 0 && bare[0] !== toxicWord[0]) continue;
@@ -1039,7 +1039,7 @@ function matchesToxicWord(text, toxicWord) {
   return false;
 }
 
-// ── STAGE 0 - PHONETIC SUBSTITUTE DETECTION ──────────────────────────────
+// ── STAGE 0 — PHONETIC SUBSTITUTE DETECTION ──────────────────────────────
 // Catches real-word sound-alike substitutions: "ducking" → "fucking",
 // "shirt" → "shit", "batch" → "bitch", etc.
 // These are real dictionary words that evade all character-level checks.
@@ -1083,7 +1083,7 @@ const phoneticSubstitutes = {
   'dye': 'die',
 };
 
-// Context gate - only trigger phonetic substitution when the sentence
+// Context gate — only trigger phonetic substitution when the sentence
 // shows aggressive intent. Prevents "sugar in my coffee", "she's a witch",
 // "I dye my hair" from being flagged as phonetic evasion.
 // Words that are almost always used as evasion (no innocent context) are exempt.
@@ -1145,15 +1145,15 @@ function phoneticSubstitute(text) {
 // words are clean. Catches: "you are such a ducking loser", "go duck yourself",
 // "what the shirt is wrong with you", second-person directed insults, etc.
 
-// Aggression indicators - requires clear hostile intent, not just second-person
+// Aggression indicators — requires clear hostile intent, not just second-person
 const aggressionSignals = [
-  // "you are [explicit insult]" - must have a specific degrading word nearby
+  // "you are [explicit insult]" — must have a specific degrading word nearby
   /\b(you|ur|u)\b.{0,20}\b(useless|worthless|pathetic|disgusting|horrible|stupid|dumb|ugly|fat|trash|garbage|loser|failure|idiot|moron|fool|clown)\b/i,
   // Explicit imperative aggression commands
   /\b(get out|go away|shut your|back off|stay away)\b/i,
-  // Threat patterns - must include actual violence/harm verb
+  // Threat patterns — must include actual violence/harm verb
   /\b(will|gonna|going to|im going to|i will)\b.{0,20}\b(hurt|destroy|ruin|kill|beat|punch)\b/i,
-  // Collective contempt - "everyone hates you"
+  // Collective contempt — "everyone hates you"
   /\b(nobody|no one|everyone|people)\b.{0,20}\b(hates?|despises?|can'?t stand)\b.{0,15}\b(you|ur|u)\b/i,
   // Direct second-person hate declaration
   /\bi\s+(hate|despise|can'?t stand)\s+(you|ur|u)\b/i,
@@ -1166,7 +1166,7 @@ const amplifiers = [
   'completely', 'utterly', 'absolutely', 'pathetically',
 ];
 
-// Soft insults - degrading even without explicit slurs
+// Soft insults — degrading even without explicit slurs
 const softInsults = [
   'loser','idiot','moron','fool','clown','joke','pathetic','disgusting',
   'worthless','useless','garbage','trash','waste','failure','stupid',
@@ -1187,7 +1187,7 @@ function sentenceContextScore(text) {
     }
   }
 
-  // Amplifier + soft insult + second-person - all three must be present
+  // Amplifier + soft insult + second-person — all three must be present
   // "you are such a loser" YES / "this is such a terrible situation" NO
   const hasAmplifier = amplifiers.some(a => lower.includes(a));
   const hasSoftInsult = softInsults.some(s => {
@@ -1200,7 +1200,7 @@ function sentenceContextScore(text) {
     signals.push('amplified_insult');
   }
 
-  // Direct hate declaration - "I hate you", "I can't stand you"
+  // Direct hate declaration — "I hate you", "I can't stand you"
   // Must have subject + hate verb + "you" in close proximity
   const hasDirectHate = /\b(i\s+hate|i\s+despise|i\s+can'?t\s+stand|sick\s+of\s+you|fed\s+up\s+with\s+you)\b/i.test(lower);
   if (hasDirectHate) {
@@ -1208,7 +1208,7 @@ function sentenceContextScore(text) {
     signals.push('direct_hate');
   }
 
-  // Phonetic substitution - real-word evasion is itself a strong intent signal
+  // Phonetic substitution — real-word evasion is itself a strong intent signal
   const { substitutionFound } = phoneticSubstitute(text);
   if (substitutionFound) {
     contextBoost += 0.20;
@@ -1222,7 +1222,7 @@ function sentenceContextScore(text) {
   return { boost: Math.min(contextBoost, 0.45), signals };
 }
 
-// ── HIGHLIGHT ENGINE - finds which words/phrases triggered the score ──────
+// ── HIGHLIGHT ENGINE — finds which words/phrases triggered the score ──────
 // Returns array of {word, start, end, tier} objects for rendering highlights
 
 function getTriggeredWords(text) {
@@ -1353,7 +1353,7 @@ function escapeHtml(str) {
 
 // ── TOXICITY WORD LISTS ───────────────────────────────────────────────────
 
-// Tier 1 - explicit slurs and severe abuse (score 0.82–0.97)
+// Tier 1 — explicit slurs and severe abuse (score 0.82–0.97)
 const tier1 = [
   // Explicit slurs
   'asshole','jackass','dick','bitch','fuck','cunt','bastard','whore','slut',
@@ -1361,7 +1361,7 @@ const tier1 = [
   'kill','go die','die','go to hell','piece of shit','stupid idiot',
   'hate you','shut up','worthless','loser','ugly','fat','retard','moron',
   'idiot','pathetic','disgusting','trash','garbage','dumb',
-  // "piece of" compound constructions - catches "piece of trash/garbage/crap/rat ass"
+  // "piece of" compound constructions — catches "piece of trash/garbage/crap/rat ass"
   'piece of trash','piece of garbage','piece of crap','piece of work',
   // "son of" constructions
   'son of a bitch','son of a',
@@ -1369,18 +1369,18 @@ const tier1 = [
   'ass',
 ];
 
-// Tier 2 - dismissive, degrading, hostile (score 0.52–0.67)
+// Tier 2 — dismissive, degrading, hostile (score 0.52–0.67)
 const tier2 = [
   'terrible','useless','failure',
   'stupid','lame','jerk','creep','hate',
-  // Dismissive terms - "you little brat", "you little pest" etc.
+  // Dismissive terms — "you little brat", "you little pest" etc.
   'brat','pest','nuisance','scum','spineless','pathetic little',
   'grow up','get lost','back off','leave me alone','mind your business',
   'none of your business','not your place','who do you think',
 ];
 
-// Tier 3 - frustrated, assertive, or mildly negative tone (score 0.18–0.33)
-// Send enabled with amber caution only - these are common in everyday conflict
+// Tier 3 — frustrated, assertive, or mildly negative tone (score 0.18–0.33)
+// Send enabled with amber caution only — these are common in everyday conflict
 const tier3 = ['frustrated','angry','upset','disappointed','unfair','wrong',
   'annoying','lazy','awful','horrible','worst','liar','fake','coward',
   'embarrassing','ridiculous'  // situation-directed as often as person-directed
@@ -1391,17 +1391,17 @@ const tier3 = ['frustrated','angry','upset','disappointed','unfair','wrong',
 // "you little brat", "piece of rat ass", "you piece of", "what a loser you are"
 function compoundPhraseScore(text) {
   const lower = text.toLowerCase().replace(/[^a-z\s]/g, ' ');
-  // "you little [X]" - dismissive/belittling
+  // "you little [X]" — dismissive/belittling
   if (/\byou\s+little\s+\w+/.test(lower)) return 0.62;
-  // "piece of [insult/body part]" - excludes innocent uses like "piece of cake"
+  // "piece of [insult/body part]" — excludes innocent uses like "piece of cake"
   if (/\bpiece\s+of\s+(trash|garbage|crap|junk|rat|dirt|work|nothing|filth|rubbish)\b/.test(lower)) return 0.78;
-  // "you [X] of a [Y]" - "you son of a..."
+  // "you [X] of a [Y]" — "you son of a..."
   if (/\byou\s+\w+\s+of\s+a\b/.test(lower)) return 0.85;
   // "what a [insult] you are / what a [insult] he/she is"
   if (/\bwhat\s+a\s+(loser|idiot|fool|clown|brat|jerk|creep|moron|pathetic)\b/.test(lower)) return 0.65;
   // "you are nothing but a [X]" / "you're nothing but"
   if (/\b(you|ur|u)\b.{0,8}\bnothing\s+but\b/.test(lower)) return 0.68;
-  // "[insult] like you" - "losers like you", "idiots like you"
+  // "[insult] like you" — "losers like you", "idiots like you"
   if (/\b(loser|idiot|fool|clown|brat|pest|trash|garbage|scum|jerk|creep)s?\s+like\s+(you|u)\b/.test(lower)) return 0.72;
   return 0;
 }
@@ -1438,7 +1438,7 @@ function simulateScore(text) {
   // Reduce tier scores significantly when language is self-directed
   const selfDirected = isSelfDirected(text);
   const otherDirected = isOtherDirected(text);
-  // If clearly self-directed and NOT targeting anyone else - apply reduction
+  // If clearly self-directed and NOT targeting anyone else — apply reduction
   const applySelfReduction = selfDirected && !otherDirected;
 
   let max = 0;
@@ -1463,15 +1463,15 @@ function simulateScore(text) {
   });
   tier3.forEach(w => { if (matchesToxicWord(textToScore, w)) max = Math.max(max, 0.18 + Math.random()*0.15); });
 
-  // Evasion phrases - obfuscation is always intentional regardless of direction
+  // Evasion phrases — obfuscation is always intentional regardless of direction
   if (matchesEvasionPhrase(textToScore)) max = Math.max(max, 0.78 + Math.random()*0.15);
 
-  // Compound phrase matching - "you little brat", "piece of rat ass", etc.
+  // Compound phrase matching — "you little brat", "piece of rat ass", etc.
   // These are inherently other-directed so no self-reduction applied
   const compoundScore = compoundPhraseScore(textToScore);
   if (compoundScore > 0) max = Math.max(max, compoundScore + Math.random()*0.05);
 
-  // Stage 0b: Sentence-level context scoring - runs on ORIGINAL text
+  // Stage 0b: Sentence-level context scoring — runs on ORIGINAL text
   // Skip context boost for self-directed language
   if (!applySelfReduction) {
     const { boost: contextBoost, signals } = sentenceContextScore(text);
@@ -1488,7 +1488,7 @@ function simulateScore(text) {
   if (/[!?]{2,}/.test(text)) max = Math.min(1, max + 0.10);
   if (text === text.toUpperCase() && text.replace(/\s/g,'').length > 5) max = Math.min(1, max + 0.08);
 
-  // Obfuscation boost - asterisks/symbols replacing letters is deliberate evasion
+  // Obfuscation boost — asterisks/symbols replacing letters is deliberate evasion
   // Give it a strong minimum score regardless of word matching
   if (hasObfuscation(text)) {
     max = Math.max(max, 0.75); // minimum 75% if deliberate symbol evasion detected
@@ -1499,10 +1499,10 @@ function simulateScore(text) {
 }
 
 // ── HUGGINGFACE API CONFIG ────────────────────────────────────────────────
-// Free inference API - no key needed for limited use
+// Free inference API — no key needed for limited use
 // Model: martin-ha/toxic-comment-model (fine-tuned on Wikipedia toxic comments)
 const HF_API_URL = 'https://api-inference.huggingface.co/models/martin-ha/toxic-comment-model';
-const HF_API_KEY = ''; // Token removed - HF API blocked by CORS on GitHub Pages anyway
+const HF_API_KEY = ''; // Token removed — HF API blocked by CORS on GitHub Pages anyway
 
 async function getScore(text) {
   if (!text.trim()) return 0;
@@ -1530,7 +1530,7 @@ async function getScore(text) {
         }
       }
     } catch(e) {
-      // API unavailable - fall back to local scorer
+      // API unavailable — fall back to local scorer
       console.log('HF API unavailable, using local scorer');
     }
   }
@@ -1540,7 +1540,7 @@ async function getScore(text) {
   return simulateScore(text);
 }
 
-function setMode(m) { /* condition locked from URL - no manual toggle */ }
+function setMode(m) { /* condition locked from URL — no manual toggle */ }
 
 function buildScenarios() {
   const nav = document.getElementById('scenario-nav');
@@ -1553,14 +1553,14 @@ function buildScenarios() {
     nav.appendChild(b);
   });
   document.getElementById('scenario-text').textContent = scenarios[0].text;
-  document.getElementById('scenario-counter').textContent = `Scenario 1 of ${scenarios.length} - ${scenarios[0].type}`;
+  document.getElementById('scenario-counter').textContent = `Scenario 1 of ${scenarios.length} — ${scenarios[0].type}`;
   scenarioTracking[0].startTime = Date.now();
 }
 
 function selectScenario(i) {
   currentScenario = i;
   document.getElementById('scenario-text').textContent = scenarios[i].text;
-  document.getElementById('scenario-counter').textContent = `Scenario ${i+1} of ${scenarios.length} - ${scenarios[i].type}`;
+  document.getElementById('scenario-counter').textContent = `Scenario ${i+1} of ${scenarios.length} — ${scenarios[i].type}`;
   document.querySelectorAll('.scenario-btn').forEach((b, j) => {
     b.classList.toggle('active', j === i);
   });
@@ -1596,15 +1596,15 @@ async function runAnalysis(text) {
   document.getElementById('spinner').style.display = 'none';
   const pct = Math.round(score * 100);
 
-  // Update highlights - show which words triggered the score
+  // Update highlights — show which words triggered the score
   const triggered = getTriggeredWords(text);
   updateHighlights(text, triggered);
 
   // ── Three-tier colour system ──────────────────────────────────────────
-  // 0–30%:  green  - acceptable, send freely
-  // 30–60%: amber  - caution zone, send disabled in TYPEBLOCK mode
-  // 60–80%: orange - harmful, blocked + warning
-  // 80%+:   red    - severely toxic, strong warning
+  // 0–30%:  green  — acceptable, send freely
+  // 30–60%: amber  — caution zone, send disabled in TYPEBLOCK mode
+  // 60–80%: orange — harmful, blocked + warning
+  // 80%+:   red    — severely toxic, strong warning
   let barColor, valColor;
   if (score < ENV_THRESHOLD_WARN) {
     barColor = '#16a34a'; valColor = '#16a34a';       // green
@@ -1624,7 +1624,7 @@ async function runAnalysis(text) {
   const txt = document.getElementById('msg-input').value.trim();
 
   if (mode !== 'typeblock') {
-    // Control mode - never block, no warnings
+    // Control mode — never block, no warnings
     isFlagged = false;
     document.getElementById('msg-input').classList.remove('flagged');
     document.getElementById('warn-message').style.display = 'none';
@@ -1632,9 +1632,9 @@ async function runAnalysis(text) {
     return;
   }
 
-  // ── TYPEBLOCK mode - apply tiers ─────────────────────────────────────
+  // ── TYPEBLOCK mode — apply tiers ─────────────────────────────────────
   if (score < ENV_THRESHOLD_WARN) {
-    // TIER 1: 0–30% - green, send freely
+    // TIER 1: 0–30% — green, send freely
     isFlagged = false;
     document.getElementById('msg-input').classList.remove('flagged');
     document.getElementById('warn-message').style.display = 'none';
@@ -1657,7 +1657,7 @@ async function runAnalysis(text) {
     document.getElementById('btn-send').disabled = !txt;
 
   } else if (score < ENV_THRESHOLD_HIGH) {
-    // TIER 3: orange, harmful - send blocked
+    // TIER 3: orange, harmful — send blocked
     isFlagged = true;
     document.getElementById('msg-input').classList.add('flagged');
     document.getElementById('msg-input').style.borderColor = '';
@@ -1673,7 +1673,7 @@ async function runAnalysis(text) {
     document.getElementById('btn-send').disabled = true;
 
   } else {
-    // TIER 4: 80%+ - red, severely toxic
+    // TIER 4: 80%+ — red, severely toxic
     isFlagged = true;
     document.getElementById('msg-input').classList.add('flagged');
     document.getElementById('msg-input').style.borderColor = '';
@@ -1696,7 +1696,7 @@ function resetAnalysis() {
   document.getElementById('warn-message').style.display = 'none';
   document.getElementById('symbol-flag').style.display = 'none';
   document.getElementById('score-fill').style.width = '0%';
-  document.getElementById('score-value').textContent = '-';
+  document.getElementById('score-value').textContent = '—';
   document.getElementById('btn-send').disabled = true;
   document.getElementById('btn-abandon').style.display = 'none';
   document.getElementById('textarea-mirror').innerHTML = '';
@@ -1797,8 +1797,9 @@ async function submitEventToSheets(item) {
   };
   try {
     await fetch(SHEETS_WEBHOOK_URL, {
-      method: 'POST', mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(payload)
     });
   } catch(e) { console.warn('Sheet submit failed:', e); }
@@ -1851,7 +1852,7 @@ function goToSurvey() {
   const target = SURVEY_URL !== 'YOUR_SURVEY_URL_HERE?pid='
     ? SURVEY_URL + encodeURIComponent(urlPid) : null;
   if (target) { window.location.href = target; }
-  else { alert('Survey URL not configured - please notify the researcher.'); }
+  else { alert('Survey URL not configured — please notify the researcher.'); }
 }
 
 function renderLog() {
@@ -1904,7 +1905,7 @@ document.getElementById('msg-input').addEventListener('scroll', function() {
     <div style="font-size:40px; margin-bottom:16px;">✅</div>
     <div style="font-size:11px; font-weight:600; letter-spacing:0.8px; color:#1a56db; text-transform:uppercase; margin-bottom:10px;">Session Complete</div>
     <div style="font-size:19px; font-weight:600; color:#0f172a; margin-bottom:10px;">All scenarios done!</div>
-    <div style="font-size:13.5px; color:#64748b; margin-bottom:28px; line-height:1.6;">Thank you for completing all 4 scenarios. Your responses have been recorded. Please click below to proceed to the short survey - it takes about 5 minutes.</div>
+    <div style="font-size:13.5px; color:#64748b; margin-bottom:28px; line-height:1.6;">Thank you for completing all 4 scenarios. Your responses have been recorded. Please click below to proceed to the short survey — it takes about 5 minutes.</div>
     <button onclick="goToSurvey()" style="width:100%; padding:13px; background:#1a56db; color:white; border:none; border-radius:8px; font-family:'Inter',sans-serif; font-size:14px; font-weight:600; cursor:pointer; margin-bottom:10px; box-shadow:0 2px 8px rgba(26,86,219,0.25);">
       Continue to Survey →
     </button>
