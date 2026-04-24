@@ -642,7 +642,7 @@
       <div class="analysis-bar hidden" id="analysis-bar">
         <div class="analysis-label">TOXICITY</div>
         <div class="score-track"><div class="score-fill" id="score-fill"></div></div>
-        <div class="score-value" id="score-value">-</div>
+        <div class="score-value" id="score-value">—</div>
         <div class="spinner" id="spinner"></div>
       </div>
       <div class="tier-legend" id="tier-legend" style="display:none; justify-content:space-between; margin-bottom:12px; padding:0 2px;">
@@ -672,7 +672,7 @@
       <div class="log-title">
         Session Log <span class="log-count" id="log-count">0</span>
       </div>
-      <div id="log-empty" class="log-empty">No messages yet - start typing above</div>
+      <div id="log-empty" class="log-empty">No messages yet — start typing above</div>
       <div class="log-list" id="log-list" style="display:none"></div>
       <div class="stats-row" id="stats-row" style="display:none">
         <div class="stat-box s-sent"><div class="stat-val" id="stat-sent">0</div><div class="stat-label">Sent</div></div>
@@ -688,13 +688,12 @@
           </button>
         </div>
         <div style="font-size:10px; color:#94a3b8; margin-top:6px;">
-          Downloads one row per message event - ready for analysis
+          Downloads one row per message event — ready for analysis
         </div>
       </div>
     </div>
   </div>
 
-  <div class="footer-note">⚡ Swap in Perspective API key (line 4 of script) to activate live scoring</div>
 </div>
 
 <div class="success-flash" id="success-flash">✓ Message sent</div>
@@ -745,9 +744,9 @@ const ENV_PROFILES = {
 
 // ── REMOTE STUDY CONFIG ──────────────────────────────────────────────────────
 // 1. Deploy your Google Apps Script (see setup guide) and paste the URL below
-const SHEETS_WEBHOOK_URL = 'YOUR_APPS_SCRIPT_URL_HERE';
+const SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwaUt-Kdba5MNS4k7tYl261L6-V8ukrx_HLCXnPGhm4kzjWBjSJxNlvjrjGHcttbzab/exec';
 // 2. Paste your post-session survey URL below (with ?pid= at the end)
-const SURVEY_URL = 'https://docs.google.com/forms/d/e/1FAIpQLScLAHEYmDA7I8xFELADtixzuStJzPEEfp1EZxa7xea-BFTsOg/viewform?usp=publish-editor';
+const SURVEY_URL = 'https://docs.google.com/forms/d/1xwOlflqoN4PPYrXVpW2wRveZ-YukFJMLqWSsz0vQ2FI/edit#settings';
 
 // ── READ CONDITION, PARTICIPANT ID & ENVIRONMENT FROM URL ────────────────────
 // Share links:
@@ -772,7 +771,7 @@ let mode = urlCondition === 'control' ? 'control' : 'typeblock';
 
 // Show environment label in badge so participant knows their context
 document.getElementById('condition-badge').textContent =
-  mode === 'control' ? 'SESSION ACTIVE' : `SESSION ACTIVE - ${envProfile.label}`;
+  mode === 'control' ? 'SESSION ACTIVE' : `SESSION ACTIVE — ${envProfile.label}`;
 
 const scenarios = [
   { type: 'Provocation',  text: "Someone just posted a negative comment about your work online, calling it 'lazy and poorly done.' How do you respond to them publicly?" },
@@ -1554,14 +1553,14 @@ function buildScenarios() {
     nav.appendChild(b);
   });
   document.getElementById('scenario-text').textContent = scenarios[0].text;
-  document.getElementById('scenario-counter').textContent = `Scenario 1 of ${scenarios.length} - ${scenarios[0].type}`;
+  document.getElementById('scenario-counter').textContent = `Scenario 1 of ${scenarios.length} — ${scenarios[0].type}`;
   scenarioTracking[0].startTime = Date.now();
 }
 
 function selectScenario(i) {
   currentScenario = i;
   document.getElementById('scenario-text').textContent = scenarios[i].text;
-  document.getElementById('scenario-counter').textContent = `Scenario ${i+1} of ${scenarios.length} - ${scenarios[i].type}`;
+  document.getElementById('scenario-counter').textContent = `Scenario ${i+1} of ${scenarios.length} — ${scenarios[i].type}`;
   document.querySelectorAll('.scenario-btn').forEach((b, j) => {
     b.classList.toggle('active', j === i);
   });
@@ -1852,7 +1851,7 @@ function goToSurvey() {
   const target = SURVEY_URL !== 'YOUR_SURVEY_URL_HERE?pid='
     ? SURVEY_URL + encodeURIComponent(urlPid) : null;
   if (target) { window.location.href = target; }
-  else { alert('Survey URL not configured - please notify the researcher.'); }
+  else { alert('Survey URL not configured — please notify the researcher.'); }
 }
 
 function renderLog() {
@@ -1905,7 +1904,7 @@ document.getElementById('msg-input').addEventListener('scroll', function() {
     <div style="font-size:40px; margin-bottom:16px;">✅</div>
     <div style="font-size:11px; font-weight:600; letter-spacing:0.8px; color:#1a56db; text-transform:uppercase; margin-bottom:10px;">Session Complete</div>
     <div style="font-size:19px; font-weight:600; color:#0f172a; margin-bottom:10px;">All scenarios done!</div>
-    <div style="font-size:13.5px; color:#64748b; margin-bottom:28px; line-height:1.6;">Thank you for completing all 4 scenarios. Your responses have been recorded. Please click below to proceed to the short survey - it takes about 5 minutes.</div>
+    <div style="font-size:13.5px; color:#64748b; margin-bottom:28px; line-height:1.6;">Thank you for completing all 4 scenarios. Your responses have been recorded. Please click below to proceed to the short survey — it takes about 5 minutes.</div>
     <button onclick="goToSurvey()" style="width:100%; padding:13px; background:#1a56db; color:white; border:none; border-radius:8px; font-family:'Inter',sans-serif; font-size:14px; font-weight:600; cursor:pointer; margin-bottom:10px; box-shadow:0 2px 8px rgba(26,86,219,0.25);">
       Continue to Survey →
     </button>
