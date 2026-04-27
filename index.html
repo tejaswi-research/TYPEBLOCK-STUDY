@@ -744,7 +744,7 @@ const ENV_PROFILES = {
 
 // ── REMOTE STUDY CONFIG ──────────────────────────────────────────────────────
 // 1. Deploy your Google Apps Script (see setup guide) and paste the URL below
-const SHEETS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyWyGFlEeszzLU9hyRHJGX6TvrJmBLLqjUG6cW0Rgul15m3NUpDtWgSzY11hpbf0Pd2Aw/exec";
+const SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbyWyGFlEeszzLU9hyRHJGX6TvrJmBLLqjUG6cW0Rgul15m3NUpDtWgSzY11hpbf0Pd2Aw/exec';
 // 2. Paste your post-session survey URL below (with ?pid= at the end)
 const SURVEY_URL = 'https://docs.google.com/forms/d/e/1FAIpQLScLAHEYmDA7I8xFELADtixzuStJzPEEfp1EZxa7xea-BFTsOg/viewform?usp=preview';
 
@@ -881,6 +881,9 @@ const evasionPhrases = [
   'f off','f u','fu','eff off','eff you','foff','fa off',
   'b word','the b word','a-hole','ahole','s-word','f-word','c-word',
   'jack ass','jackass',
+  // Toxic acronyms - common abbreviations that bypass word-level detection
+  'stfu','gtfo','kys','kys','foad','gfy','pos',
+  'omfg','wtaf','sthu',
 ];
 
 function matchesEvasionPhrase(text) {
@@ -1157,6 +1160,13 @@ const aggressionSignals = [
   /\b(nobody|no one|everyone|people)\b.{0,20}\b(hates?|despises?|can'?t stand)\b.{0,15}\b(you|ur|u)\b/i,
   // Direct second-person hate declaration
   /\bi\s+(hate|despise|can'?t stand)\s+(you|ur|u)\b/i,
+  // Condescension patterns - covert aggression through dismissiveness
+  /\bmaybe if you\b.{0,30}\b(actually|really|properly|just)\b/i,
+  /\bif you (actually|really|even|just)\b.{0,20}\b(understood|knew|read|listened|paid attention)\b/i,
+  /\byou (clearly|obviously|apparently|evidently) don'?t\b/i,
+  /\byou don'?t know what you'?re talking about\b/i,
+  /\bit'?s easy to (criticize|criticise|judge|complain|say that)\b.{0,20}\b(you|when you)\b/i,
+  /\b(ignorant|clueless|oblivious)\b.{0,20}\b(comment|opinion|remark|statement)\b/i,
 ];
 
 // Amplifier words that raise intensity of surrounding context
@@ -1367,6 +1377,8 @@ const tier1 = [
   'son of a bitch','son of a',
   // Short but explicit
   'ass',
+  // Toxic acronyms - must be matched as whole words
+  'stfu','gtfo','kys','foad','gfy',
 ];
 
 // Tier 2 - dismissive, degrading, hostile (score 0.52–0.67)
@@ -1386,7 +1398,65 @@ const tier3 = ['frustrated','angry','upset','disappointed','unfair','wrong',
   'embarrassing','ridiculous'  // situation-directed as often as person-directed
 ];
 
-// ── COMPOUND PHRASE SCORER ────────────────────────────────────────────────
+// ── TOXIC ACRONYM DETECTION ───────────────────────────────────────────────
+// Acronyms bypass word-level detection entirely - need exact boundary matching
+// Tier A = always block (explicit, unambiguous)
+// Tier B = context dependent (can be frustrated venting, lower score)
+
+const toxicAcronymsTierA = [
+  'stfu',   // shut the f*** up
+  'gtfo',   // get the f*** out
+  'kys',    // kill yourself - severe
+  'foad',   // f*** off and die
+  'gfy',    // go f*** yourself
+  'stfd',   // sit the f*** down
+  'mf',     // motherf***er
+  'mfu',    // motherf***er (variant)
+  'mofo',   // motherf***er
+  'sob',    // son of a b****
+  'pos',    // piece of s***
+  'dilligaf', // do I look like I give a f***
+  'idgaf',  // I don't give a f***
+  // Indian/Hinglish abbreviations - severe
+  'bc',     // b***chod
+  'mc',     // m***chod
+  'bkl',    // b***klod
+  'bhk',    // b***e h***amzade k***
+  'lmao',   // not toxic alone but used aggressively
+];
+
+const toxicAcronymsTierB = [
+  'wtf',    // what the f*** - very common, frustration
+  'wth',    // what the hell
+  'omfg',   // oh my f***ing god
+  'omg',    // context dependent
+  'fml',    // f*** my life - self directed
+  'bs',     // bulls*** - depends on context
+  'sthu',   // shut the hell up
+  'idiot',  // sometimes used as abbreviation in context
+];
+
+function matchesToxicAcronym(text) {
+  const lower = text.toLowerCase().replace(/[^a-z\s]/g, ' ');
+
+  // Tier A - always block level (0.85+)
+  const tierAHit = toxicAcronymsTierA.some(a => {
+    const re = new RegExp('\\b' + a + '\\b');
+    return re.test(lower);
+  });
+  if (tierAHit) return 'A';
+
+  // Tier B - caution level (0.45+), only flag if directed at someone
+  const tierBHit = toxicAcronymsTierB.some(a => {
+    const re = new RegExp('\\b' + a + '\\b');
+    return re.test(lower);
+  });
+  // Tier B only flags if message also has second-person pronoun
+  // "wtf were you thinking" = flag / "wtf that's crazy" = don't flag
+  if (tierBHit && /\b(you|ur|u\b|your|yours)\b/.test(lower)) return 'B';
+
+  return null;
+}
 // Catches multi-word abuse patterns that individual word matching misses:
 // "you little brat", "piece of rat ass", "you piece of", "what a loser you are"
 function compoundPhraseScore(text) {
@@ -1465,6 +1535,11 @@ function simulateScore(text) {
 
   // Evasion phrases - obfuscation is always intentional regardless of direction
   if (matchesEvasionPhrase(textToScore)) max = Math.max(max, 0.78 + Math.random()*0.15);
+
+  // Toxic acronyms - exact word boundary match
+  const acronymTier = matchesToxicAcronym(text);
+  if (acronymTier === 'A') max = Math.max(max, 0.85 + Math.random()*0.10);
+  if (acronymTier === 'B') max = Math.max(max, 0.45 + Math.random()*0.10);
 
   // Compound phrase matching - "you little brat", "piece of rat ass", etc.
   // These are inherently other-directed so no self-reduction applied
