@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head><title>HF API Test</title></head>
+<body>
+<h2>HuggingFace API Test</h2>
+<textarea id="msg" rows="3" cols="50">I have classes today</textarea><br><br>
+<button onclick="testAPI()">Test Score</button>
+<p id="result">Result will appear here</p>
+
+<script>
+const HF_TOKEN = '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';
+const MODEL = 'martin-ha/toxic-comment-model';
+
+async function testAPI() {
+  const text = document.getElementById('msg').value;
+  document.getElementById('result').textContent = 'Testing...';
+  
+  try {
+    const response = await fetch(
+      `https://api-inference.huggingface.co/models/${MODEL}`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${HF_TOKEN}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ inputs: text })
+      }
+    );
+    
+    const data = await response.json();
+    console.log('Response:', data);
+    
+    if (Array.isArray(data) && data[0]) {
+      const labels = Array.isArray(data[0]) ? data[0] : data;
+      const toxic = labels.find(l => 
+        l.label && l.label.toLowerCase().includes('toxic') && 
+        !l.label.toLowerCase().includes('non')
+      );
+      if (toxic) {
+        document.getElementById('result').textContent = 
+          `Score: ${(toxic.score * 100).toFixed(1)}% | Raw: ${JSON.stringify(labels)}`;
+      } else {
+        document.getElementById('result').textContent = 
+          `Raw response: ${JSON.stringify(data)}`;
+      }
+    } else {
+      document.getElementById('result').textContent = 
+        `Response: ${JSON.stringify(data)}`;
+    }
+  } catch(err) {
+    document.getElementById('result').textContent = `Error: ${err.message}`;
+    console.error(err);
+  }
+}
+</script>
+</body>
+</html>
