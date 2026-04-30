@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TYPEBLOCK</title>
+<title>TYPEBLOCK </title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -744,9 +744,9 @@ const ENV_PROFILES = {
 
 // ── REMOTE STUDY CONFIG ──────────────────────────────────────────────────────
 // 1. Deploy your Google Apps Script (see setup guide) and paste the URL below
-const SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbyWyGFlEeszzLU9hyRHJGX6TvrJmBLLqjUG6cW0Rgul15m3NUpDtWgSzY11hpbf0Pd2Aw/exec';
+const SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwaUt-Kdba5MNS4k7tYl261L6-V8ukrx_HLCXnPGhm4kzjWBjSJxNlvjrjGHcttbzab/exec';
 // 2. Paste your post-session survey URL below (with ?pid= at the end)
-const SURVEY_URL = 'https://docs.google.com/forms/d/e/1FAIpQLScLAHEYmDA7I8xFELADtixzuStJzPEEfp1EZxa7xea-BFTsOg/viewform?usp=preview';
+const SURVEY_URL = 'YOUR_SURVEY_URL_HERE?pid=';
 
 // ── READ CONDITION, PARTICIPANT ID & ENVIRONMENT FROM URL ────────────────────
 // Share links:
@@ -880,7 +880,7 @@ function hasObfuscation(t) {
 const evasionPhrases = [
   'f off','f u','fu','eff off','eff you','foff','fa off',
   'b word','the b word','a-hole','ahole','s-word','f-word','c-word',
-  'jack ass','jackass',
+  'jack ass','jackass','yo ahh','yo ass','ya ass','ur ahh',
   // Toxic acronyms - common abbreviations that bypass word-level detection
   'stfu','gtfo','kys','kys','foad','gfy','pos',
   'omfg','wtaf','sthu',
@@ -947,6 +947,8 @@ const whitelist = new Set([
   'when','hear','hears','heard','weren','mine','more','stop','sure','us','shared',
   'idea','ideas','escaped','escape','before','genius','baked','cooked','coked','fully',
   'assessment','asesment','assessments','assign','assume','assist','association',
+  'class','classes','classroom','classrooms','classmate','classmates','classic','classify',
+  'flawed','flaw','pov','perspective','aint','lazy','poorly',
   'really','half','again','looks','looked','like','that','wow','try','trying','loks','realy',
   'cancel','plans','tolerate','intolerable','opinions','opinion','spreading','rumours',
   'cant','wont','dont','isnt','wasnt','couldnt','shouldnt','wouldnt','arent','didnt','hadnt',
@@ -1377,6 +1379,8 @@ const tier1 = [
   'son of a bitch','son of a',
   // Short but explicit
   'ass',
+  // Existential threats - telling someone to cease to exist
+  'delete your existence','delete yourself','cease to exist','stop existing',
   // Toxic acronyms - must be matched as whole words
   'stfu','gtfo','kys','foad','gfy',
 ];
@@ -1384,7 +1388,7 @@ const tier1 = [
 // Tier 2 - dismissive, degrading, hostile (score 0.52–0.67)
 const tier2 = [
   'terrible','useless','failure',
-  'stupid','lame','jerk','creep','hate',
+  'stupid','lame','jerk','creep','hate','snob','snobby','condescending',
   // Dismissive terms - "you little brat", "you little pest" etc.
   'brat','pest','nuisance','scum','spineless','pathetic little',
   'grow up','get lost','back off','leave me alone','mind your business',
@@ -1410,6 +1414,8 @@ const toxicAcronymsTierA = [
   'foad',   // f*** off and die
   'gfy',    // go f*** yourself
   'stfd',   // sit the f*** down
+  'sybau',  // shut your big a** up
+  'sysfu',  // shut your stupid f***ing up
   'mf',     // motherf***er
   'mfu',    // motherf***er (variant)
   'mofo',   // motherf***er
@@ -1647,13 +1653,25 @@ function handleInput() {
   const el = document.getElementById('msg-input');
   const text = el.value;
   document.getElementById('char-count').textContent = `${text.length} / 500`;
+  document.getElementById('btn-abandon').style.display = text.length > 0 ? 'inline-flex' : 'none';
+  scenarioTracking[currentScenario].editCount++;
+
+  // CONTROL CONDITION - no toxicity analysis, send always enabled
+  if (mode === 'control') {
+    document.getElementById('analysis-bar').classList.add('hidden');
+    document.getElementById('tier-legend').style.display = 'none';
+    document.getElementById('warn-message').style.display = 'none';
+    document.getElementById('symbol-flag').style.display = 'none';
+    document.getElementById('btn-send').disabled = !text.trim();
+    return;
+  }
+
+  // EXPERIMENTAL CONDITION - full toxicity analysis
   const obf = hasObfuscation(text);
   const { substitutionFound } = phoneticSubstitute(text);
   const flagged = obf || substitutionFound;
   document.getElementById('symbol-flag').style.display = flagged ? 'flex' : 'none';
   if (flagged) scenarioTracking[currentScenario].obfuscationSeen = true;
-  document.getElementById('btn-abandon').style.display = text.length > 0 ? 'inline-flex' : 'none';
-  scenarioTracking[currentScenario].editCount++;
 
   if (!text.trim()) { resetAnalysis(); return; }
 
@@ -1796,10 +1814,16 @@ function clearMsg() {
   resetAnalysis();
 }
 
-function sendMsg() {
+async function sendMsg() {
   const text = document.getElementById('msg-input').value.trim();
   if (!text) return;
-  addLog(text, lastScore, 'sent');
+  // For control condition - silently compute toxicity score for research data
+  // but never show it to the participant
+  let scoreToLog = lastScore;
+  if (mode === 'control') {
+    scoreToLog = await getScore(text);
+  }
+  addLog(text, scoreToLog, 'sent');
   clearMsg();
   const f = document.getElementById('success-flash');
   f.classList.add('show');
