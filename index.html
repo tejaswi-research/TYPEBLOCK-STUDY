@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TYPEBLOCK </title>
+<title>TYPEBLOCK</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -746,7 +746,7 @@ const ENV_PROFILES = {
 // 1. Deploy your Google Apps Script (see setup guide) and paste the URL below
 const SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwaUt-Kdba5MNS4k7tYl261L6-V8ukrx_HLCXnPGhm4kzjWBjSJxNlvjrjGHcttbzab/exec';
 // 2. Paste your post-session survey URL below (with ?pid= at the end)
-const SURVEY_URL = 'YOUR_SURVEY_URL_HERE?pid=';
+const SURVEY_URL = 'https://docs.google.com/forms/d/e/1FAIpQLScLAHEYmDA7I8xFELADtixzuStJzPEEfp1EZxa7xea-BFTsOg/viewform?usp=preview';
 
 // ── READ CONDITION, PARTICIPANT ID & ENVIRONMENT FROM URL ────────────────────
 // Share links:
@@ -948,6 +948,7 @@ const whitelist = new Set([
   'idea','ideas','escaped','escape','before','genius','baked','cooked','coked','fully',
   'assessment','asesment','assessments','assign','assume','assist','association',
   'class','classes','classroom','classrooms','classmate','classmates','classic','classify',
+  'clas','clasrom','clasmate','clasmates','clasic', // deduplicated forms
   'flawed','flaw','pov','perspective','aint','lazy','poorly',
   'really','half','again','looks','looked','like','that','wow','try','trying','loks','realy',
   'cancel','plans','tolerate','intolerable','opinions','opinion','spreading','rumours',
