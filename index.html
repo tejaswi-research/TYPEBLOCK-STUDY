@@ -746,7 +746,7 @@ const ENV_PROFILES = {
 // 1. Deploy your Google Apps Script (see setup guide) and paste the URL below
 const SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwaUt-Kdba5MNS4k7tYl261L6-V8ukrx_HLCXnPGhm4kzjWBjSJxNlvjrjGHcttbzab/exec';
 // 2. Paste your post-session survey URL below (with ?pid= at the end)
-const SURVEY_URL = 'https://docs.google.com/forms/d/e/1FAIpQLScLAHEYmDA7I8xFELADtixzuStJzPEEfp1EZxa7xea-BFTsOg/viewform?usp=preview';
+const SURVEY_URL = 'YOUR_SURVEY_URL_HERE?pid=';
 
 // ── READ CONDITION, PARTICIPANT ID & ENVIRONMENT FROM URL ────────────────────
 // Share links:
@@ -948,8 +948,13 @@ const whitelist = new Set([
   'idea','ideas','escaped','escape','before','genius','baked','cooked','coked','fully',
   'assessment','asesment','assessments','assign','assume','assist','association',
   'class','classes','classroom','classrooms','classmate','classmates','classic','classify',
-  'clas','clasrom','clasmate','clasmates','clasic', // deduplicated forms
+  'clas','clases','clasrom','clasmate','clasmates','clasic', // deduplicated forms
+  'grass','grases','mass','mases','pass','pases','bass','basses',
+  'glasses','glases','massive','masive','passion','pasion','passage','pasage',
+  'assistant','asistant','assassin','asasin','harass','haras','embarrass','embaras',
+  'massage','masage','classical','clasical','assing','asing','passing','pasing',
   'flawed','flaw','pov','perspective','aint','lazy','poorly',
+  'rather','rumours','rumour','rumors','rumor','spreading','language','better','things',
   'really','half','again','looks','looked','like','that','wow','try','trying','loks','realy',
   'cancel','plans','tolerate','intolerable','opinions','opinion','spreading','rumours',
   'cant','wont','dont','isnt','wasnt','couldnt','shouldnt','wouldnt','arent','didnt','hadnt',
@@ -981,7 +986,15 @@ function matchesToxicWord(text, toxicWord) {
   const leetToxOrig= leetNormalize(toxicWord);
   if (toxicWord.length <= 4) {
     const boundary = new RegExp('\\b' + leetToxOrig.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '\\b', 'i');
-    if (boundary.test(leetOrig)) return true;
+    // Additional guard for very short toxic words (3 chars like 'ass', 'die'):
+    // Only match if the actual word in text is also short (≤5 chars)
+    // This prevents 'ass' matching inside 'classes', 'classesa', 'massive' etc.
+    if (boundary.test(leetOrig)) {
+      // Find the actual matching word and check its length
+      const matchWord = leetOrig.match(new RegExp('\\b\\w*' + leetToxOrig.replace(/[.*+?^${}()|[\]\\]/g,'\\$&') + '\\w*\\b', 'i'));
+      if (matchWord && matchWord[0].length <= toxicWord.length + 2) return true;
+      if (!matchWord) return true; // boundary match with no word context - flag it
+    }
   } else {
     if (leetText.includes(leetToxic)) return true;
     if (leetOrig.includes(leetToxOrig)) return true;
@@ -1019,7 +1032,15 @@ function matchesToxicWord(text, toxicWord) {
   const phoneticToxic = phoneticNormalize(toxicWord);
   for (const token of tokens) {
     const bare = token.replace(/[^a-z]/g,'');
+    // Check whitelist on deduplicated form AND original form
+    // This catches cases like 'classes' → deduped 'clases' where original is whitelisted
+    const origBare = token.replace(/[^a-z]/g,''); // same as bare here since tokens are already from deduped
     if (whitelist.has(bare)) continue;
+    // Also check original text tokens for whitelist
+    const origTokens = text.toLowerCase().split(/\s+/);
+    const origToken = origTokens[tokens.indexOf(token)] || '';
+    const origBareOrig = origToken.replace(/[^a-z]/g,'');
+    if (whitelist.has(origBareOrig)) continue;
     const cleanToken = stripSymbols(token);
     const phoneticToken = phoneticNormalize(token);
 
@@ -1372,7 +1393,7 @@ const tier1 = [
   'asshole','jackass','dick','bitch','fuck','cunt','bastard','whore','slut',
   // Severe phrases
   'kill','go die','die','go to hell','piece of shit','stupid idiot',
-  'hate you','shut up','worthless','loser','ugly','fat','retard','moron',
+  'hate you','shut up','worthless','loser','ugly','fat','moron',
   'idiot','pathetic','disgusting','trash','garbage','dumb',
   // "piece of" compound constructions - catches "piece of trash/garbage/crap/rat ass"
   'piece of trash','piece of garbage','piece of crap','piece of work',
@@ -1429,7 +1450,7 @@ const toxicAcronymsTierA = [
   'mc',     // m***chod
   'bkl',    // b***klod
   'bhk',    // b***e h***amzade k***
-  'lmao',   // not toxic alone but used aggressively
+  'retard', // slur - exact boundary match only, not fuzzy
 ];
 
 const toxicAcronymsTierB = [
